@@ -13,8 +13,7 @@ RUN apt-get update \
       tesseract-ocr tesseract-ocr-osd \
       $(for l in $OCR_LANGS; do printf 'tesseract-ocr-%s ' "$l"; done) \
       ghostscript unpaper pngquant \
-      libreoffice-writer-nogui \
-      fonts-liberation fonts-dejavu-core fonts-crosextra-carlito fonts-crosextra-caladea \
+      fonts-dejavu-core \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /srv

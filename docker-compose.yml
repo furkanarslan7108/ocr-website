@@ -20,7 +20,7 @@ services:
       - ocr-data:/data
     networks:
       - internal
-    # LibreOffice/Ghostscript need some shared memory headroom.
+    # Ghostscript/Tesseract workers need some shared memory headroom.
     shm_size: 256m
 
   nginx:
@@ -45,7 +45,7 @@ volumes:
   ocr-data:
 
 networks:
-  # The backend has no route to the internet: untrusted documents can't make it fetch anything.
+  # The backend has no route to the internet: untrusted files can't make it fetch anything.
   internal:
     internal: true
   public:

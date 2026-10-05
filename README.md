@@ -2,10 +2,10 @@
 
 Turn scans, photos and documents into **searchable, bookmarked PDFs**.
 
-Drop in PDFs, Word/ODT/RTF/TXT files or images (JPG, PNG, TIFF incl. multi-page, HEIC, WebP, BMP, GIF).
+Drop in PDFs, plain-text/Markdown files or images (JPG, PNG, TIFF incl. multi-page, HEIC, WebP, BMP, GIF).
 Each file is converted to PDF, OCR'd with Tesseract, and given a navigable outline (bookmarks):
 
-- Existing structure is kept: Word headings and PDF bookmarks carry straight through.
+- Existing structure is kept: a PDF's own bookmarks carry straight through.
 - Otherwise headings are **detected** from the text layer: larger-than-body lines and numbered
   headings (`2.1 Methods`, `Chapter 3`, `IV. Results`), with running headers/footers filtered out.
 - Multi-page documents without detectable headings get one bookmark per page.
@@ -20,7 +20,7 @@ cp .env.example .env     # optional: tweak port, languages, limits
 docker compose up -d --build
 ```
 
-Open <http://localhost:8080>. The first build takes a few minutes; LibreOffice and Tesseract make up most of the image.
+Open <http://localhost:8080>. The first build takes a few minutes.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Open <http://localhost:8080>. The first build takes a few minutes; LibreOffice a
 browser ──► nginx :80 ──► static frontend (vanilla JS, no build step)
               │
               ├─ /api/* ──► FastAPI backend (internal network, no internet access)
-              │               └─ job queue ─► LibreOffice / img2pdf ─► OCRmyPDF (Tesseract) ─► PyMuPDF (outline, text)
+              │               └─ job queue ─► img2pdf / text layout ─► OCRmyPDF (Tesseract) ─► PyMuPDF (outline, text)
               │
               └─ /protected/* (internal) ◄── X-Accel-Redirect: nginx streams result files from the shared volume
 ```
@@ -36,7 +36,7 @@ browser ──► nginx :80 ──► static frontend (vanilla JS, no build step
 | Piece | Choice | Why |
 |---|---|---|
 | OCR | OCRmyPDF 17 + Tesseract 5 | Industry-standard searchable PDFs; parallel per page; deskew/rotation/cleaning |
-| Office → PDF | LibreOffice headless | Best fidelity for DOC/DOCX/ODT/RTF; exports headings as bookmarks |
+| Text → PDF | PyMuPDF Story | TXT/MD laid out on A4; Markdown `#` headings become bookmarks |
 | Images → PDF | img2pdf + Pillow | Lossless; original JPEG bytes are embedded without re-encoding |
 | Sectioning | PyMuPDF | Fast text/font-size extraction and outline writing |
 | API | FastAPI, single process | Jobs run in an in-process bounded queue: no Redis/Celery to operate |
@@ -86,5 +86,6 @@ curl -F files=@scan.pdf -F languages=eng http://localhost:8080/api/jobs
 
 - Job IDs are unguessable 128-bit tokens and act as the access key. There are no user accounts, so put the app
   behind your own auth (e.g. an nginx `auth_basic` or SSO proxy) if it is exposed beyond a trusted network.
+- Word/ODT/RTF input is not supported (LibreOffice was dropped to keep the image small). Export those to PDF first.
 - PyMuPDF is AGPL-licensed (commercial licence available from Artifex). This is fine for self-hosting, but check it
   if you plan to distribute a modified version.

@@ -481,7 +481,7 @@
       alertInline("Could not reach the server. Check that the backend is running.");
     }
     el.ttlNote.textContent = `Files are deleted automatically after ${Math.round(config.job_ttl_minutes / 60 * 10) / 10} h`;
-    el.acceptedNote.textContent = `PDF, Word, ODT, RTF, TXT, JPG, PNG, TIFF, HEIC… up to ${config.max_file_mb} MB each`;
+    el.acceptedNote.textContent = `PDF, JPG, PNG, TIFF, HEIC, TXT, MD… up to ${config.max_file_mb} MB each`;
     el.input.accept = config.accepted_extensions.join(",");
     applyOptions(storage.get(STORE_OPTS, {}));
     restoreJobs();

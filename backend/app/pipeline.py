@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import html
 import json
 import logging
 import os
+import re
 import shutil
 import signal
 import time
-import uuid
 from collections.abc import Callable
 from pathlib import Path
 
@@ -25,9 +26,11 @@ log = logging.getLogger(__name__)
 
 PDF_EXT = {".pdf"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif", ".webp", ".heic", ".heif", ".jp2"}
-DOCUMENT_EXT = {".doc", ".docx", ".odt", ".rtf", ".txt", ".md"}
-PLAIN_TEXT_EXT = {".txt", ".md"}
-ACCEPTED_EXT = PDF_EXT | IMAGE_EXT | DOCUMENT_EXT
+TEXT_EXT = {".txt", ".md"}
+ACCEPTED_EXT = PDF_EXT | IMAGE_EXT | TEXT_EXT
+
+TEXT_FONT_DIR = "/usr/share/fonts/truetype/dejavu"
+MD_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 
 MODES = {
     "auto": "--skip-text",  # OCR only pages that have no text yet (fastest)
@@ -50,8 +53,8 @@ def classify(filename: str) -> str | None:
         return "pdf"
     if ext in IMAGE_EXT:
         return "image"
-    if ext in DOCUMENT_EXT:
-        return "document"
+    if ext in TEXT_EXT:
+        return "text"
     return None
 
 
@@ -173,26 +176,48 @@ def image_to_pdf(src: Path, dst: Path, work: Path) -> None:
         dst.write_bytes(img2pdf.convert(pages, layout_fun=layout))
 
 
-async def document_to_pdf(src: Path, dst: Path, work: Path) -> None:
-    profile = work / f"lo-{uuid.uuid4().hex}"
-    outdir = work / f"lo-out-{uuid.uuid4().hex}"
-    args = [
-        "soffice", "--headless", "--norestore", "--nolockcheck", "--nologo", "--nodefault",
-        f"-env:UserInstallation={profile.as_uri()}",
-    ]
-    if src.suffix.lower() in PLAIN_TEXT_EXT:
-        args.append("--infilter=Text (encoded):UTF8")
-    args += ["--convert-to", "pdf", "--outdir", str(outdir), str(src)]
+def _decode_text(raw: bytes) -> str:
     try:
-        rc, err = await _run(args, env={**os.environ, "HOME": str(work)})
-        produced = outdir / f"{src.stem}.pdf"
-        if rc != 0 or not produced.exists():
-            log.warning("LibreOffice failed (rc=%s): %s", rc, err[-2000:])
-            raise PipelineError("The document could not be converted; it may be corrupt or password protected.")
-        produced.replace(dst)
-    finally:
-        shutil.rmtree(profile, ignore_errors=True)
-        shutil.rmtree(outdir, ignore_errors=True)
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="replace")
+
+
+def text_to_pdf(src: Path, dst: Path) -> None:
+    """Lay out a plain-text/Markdown file on A4 pages. Markdown '#' lines become sized headings."""
+    is_md = src.suffix.lower() == ".md"
+    blocks = []
+    for line in _decode_text(src.read_bytes()).expandtabs(4).splitlines():
+        m = MD_HEADING_RE.match(line) if is_md else None
+        if m:
+            level = min(len(m.group(1)), 3)
+            blocks.append(f"<h{level}>{html.escape(m.group(2))}</h{level}>")
+        else:
+            blocks.append(f"<p>{html.escape(line) or '&#160;'}</p>")
+    css = (
+        "@font-face {font-family: body; src: url(DejaVuSans.ttf);}"
+        "@font-face {font-family: body; font-weight: bold; src: url(DejaVuSans-Bold.ttf);}"
+        "body {font-family: body; font-size: 10.5pt;}"
+        "p {margin: 0 0 3pt 0; white-space: pre-wrap;}"
+        "h1 {font-size: 20pt; margin: 12pt 0 6pt 0;} h2 {font-size: 16pt; margin: 10pt 0 5pt 0;}"
+        "h3 {font-size: 13.5pt; margin: 8pt 0 4pt 0;}"
+    )
+    story = pymupdf.Story(html="".join(blocks), user_css=css, archive=pymupdf.Archive(TEXT_FONT_DIR))
+    page = pymupdf.paper_rect("a4")
+    area = page + (54, 54, -54, -54)
+    writer = pymupdf.DocumentWriter(str(dst))
+    more = True
+    while more:
+        device = writer.begin_page(page)
+        more, _ = story.place(area)
+        story.draw(device)
+        writer.end_page()
+    writer.close()
+    # Story embeds whole font files; keep only the glyphs actually used.
+    with pymupdf.open(dst) as doc:
+        doc.subset_fonts()
+        data = doc.tobytes(garbage=3, deflate=True)
+    dst.write_bytes(data)
 
 
 def prepare_pdf(src: Path, dst: Path) -> int:
@@ -218,8 +243,8 @@ async def to_pdf(item: dict, work: Path, index: int) -> tuple[Path, int]:
     staged = work / f"{index:03d}.src.pdf"
     if item["kind"] == "image":
         await asyncio.to_thread(image_to_pdf, src, staged, work)
-    elif item["kind"] == "document":
-        await document_to_pdf(src, staged, work)
+    elif item["kind"] == "text":
+        await asyncio.to_thread(text_to_pdf, src, staged)
     else:
         staged = src
     dst = work / f"{index:03d}.in.pdf"

@@ -1,7 +1,7 @@
 """Turn OCR'd PDFs into a sectioned PDF: detect headings, write bookmarks, merge parts, extract text.
 
 Strategy, in order of trust:
-  1. Keep bookmarks the source already has (e.g. Word headings exported by LibreOffice).
+  1. Keep bookmarks the source already has (e.g. a PDF's own outline).
   2. Detect headings from the text layer: lines noticeably larger than body text, or
      numbered lines ("2.1 Methods", "Chapter 3", "IV. Results"), minus running headers/footers.
   3. Fall back to one bookmark per page for multi-page documents.
