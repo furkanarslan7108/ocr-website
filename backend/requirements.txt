@@ -1,0 +1,8 @@
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+ocrmypdf==17.13.0
+pymupdf==1.28.2
+pillow==12.3.0
+pillow-heif==1.8.0
+img2pdf==0.6.3

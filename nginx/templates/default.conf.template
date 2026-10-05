@@ -1,0 +1,60 @@
+# Rendered by the nginx image's envsubst step; ${VARS} come from the container environment.
+
+upstream backend {
+    server backend:8000;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size ${NGINX_MAX_BODY};
+    server_tokens off;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_types text/css application/javascript application/json image/svg+xml text/plain;
+
+    # Note: a location that sets its own add_header drops these, so "/" repeats them.
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy same-origin always;
+
+    root /usr/share/nginx/html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; frame-ancestors 'none'" always;
+        add_header X-Frame-Options DENY always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy same-origin always;
+    }
+
+    location ~* \.(?:css|js|svg)$ {
+        expires 1h;
+    }
+
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Stream uploads straight through instead of buffering them to disk twice.
+        proxy_request_buffering off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    # Result files are served by nginx directly after the backend authorizes via X-Accel-Redirect.
+    location /protected/ {
+        internal;
+        alias /data/;
+        charset utf-8;
+        charset_types text/plain;
+        sendfile on;
+        tcp_nopush on;
+    }
+}

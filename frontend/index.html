@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OCR Desk</title>
+  <meta name="description" content="Turn scans, photos and documents into searchable, bookmarked PDFs.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="./">
+        <img src="favicon.svg" alt="" width="26" height="26">
+        <span>OCR Desk</span>
+      </a>
+      <span class="muted small" id="ttl-note"></span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" aria-labelledby="upload-title">
+      <h1 id="upload-title" class="visually-hidden">Upload files</h1>
+      <label class="dropzone" id="dropzone" tabindex="0">
+        <input type="file" id="file-input" multiple hidden>
+        <svg class="dz-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="dz-title">Drop files here or <u>browse</u></span>
+        <span class="dz-sub muted" id="accepted-note">PDF, Word, images and text files</span>
+        <span class="dz-sub muted">You can also paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
+      </label>
+
+      <div id="staging" class="staging" hidden>
+        <ul id="staged-list" class="staged-list"></ul>
+
+        <div class="options">
+          <fieldset class="opt">
+            <legend>Languages</legend>
+            <div id="languages" class="chips"></div>
+          </fieldset>
+
+          <fieldset class="opt">
+            <legend>OCR mode</legend>
+            <div class="segmented" id="mode">
+              <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
+              <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
+              <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+            </div>
+            <p class="hint muted" id="mode-hint"></p>
+          </fieldset>
+
+          <fieldset class="opt">
+            <legend>Image cleanup</legend>
+            <label class="toggle"><input type="checkbox" id="opt-rotate" checked><span>Auto-rotate pages</span></label>
+            <label class="toggle"><input type="checkbox" id="opt-deskew"><span>Straighten (deskew)</span></label>
+            <label class="toggle"><input type="checkbox" id="opt-clean"><span>Clean noise before OCR</span></label>
+          </fieldset>
+
+          <fieldset class="opt" id="combine-box" hidden>
+            <legend>Output</legend>
+            <label class="toggle"><input type="checkbox" id="opt-combine"><span>Combine into one PDF</span></label>
+            <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+          </fieldset>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="clear-staged">Clear</button>
+          <button type="button" class="btn primary" id="start">Process files</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="results" hidden aria-labelledby="results-title">
+      <div class="results-head">
+        <h2 id="results-title">Results</h2>
+        <button type="button" class="btn ghost small" id="clear-finished">Clear finished</button>
+      </div>
+      <ol id="job-list" class="job-list"></ol>
+    </section>
+  </main>
+
+  <template id="job-template">
+    <li class="job">
+      <div class="job-row">
+        <div class="job-icon" aria-hidden="true"></div>
+        <div class="job-main">
+          <div class="job-name"></div>
+          <div class="job-stage muted small"></div>
+        </div>
+        <span class="pill"></span>
+        <button type="button" class="icon-btn job-remove" title="Remove" aria-label="Remove">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="bar"><span></span></div>
+      <div class="job-done" hidden>
+        <div class="job-meta muted small"></div>
+        <div class="job-actions">
+          <a class="btn primary small dl-pdf" download>Download PDF</a>
+          <a class="btn small open-pdf" target="_blank" rel="noopener">Open</a>
+          <a class="btn small dl-txt" download>Text</a>
+          <button type="button" class="btn ghost small toggle-sections" aria-expanded="false">Sections</button>
+        </div>
+        <ol class="outline" hidden></ol>
+      </div>
+      <div class="job-error" hidden></div>
+    </li>
+  </template>
+</body>
+</html>
