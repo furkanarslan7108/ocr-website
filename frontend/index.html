@@ -12,146 +12,197 @@
 <body>
   <header class="topbar" id="topbar">
     <div class="topbar-inner">
-      <button type="button" class="icon-btn bar-btn" id="toggle-sidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Show history" title="History">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.6"/></svg>
-      </button>
-      <a class="brand" href="./">
+      <a class="brand" href="#convert">
         <img src="favicon.svg" alt="" width="24" height="24">
         <span>OCR Desk</span>
       </a>
+      <nav class="nav" id="nav" aria-label="Sections">
+        <a href="#convert" data-view="convert">Convert</a>
+        <a href="#library" data-view="library">Library<span class="nav-count" id="library-count"></span></a>
+      </nav>
       <span class="muted small" id="ttl-note"></span>
     </div>
   </header>
 
-  <div class="shell" id="shell">
-  <aside class="sidebar" id="sidebar" aria-label="Previous conversions">
-    <div class="sidebar-head">
-      <h2>History</h2>
-      <span class="muted small" id="history-count"></span>
-    </div>
-    <div class="sidebar-search">
-      <input type="search" id="history-search" class="text-input" placeholder="Search" aria-label="Search history">
-    </div>
-    <div class="history" id="history">
-      <p class="history-empty muted small" id="history-empty">Finished conversions are saved in this browser and show up here.</p>
-    </div>
-    <div class="sidebar-foot">
-      <span class="muted small" id="storage-note"></span>
-      <button type="button" class="btn ghost small" id="clear-history" hidden>Clear all</button>
-    </div>
-  </aside>
-  <div class="scrim" id="scrim" hidden></div>
+  <main>
+    <!-- ============================================================ Convert -->
+    <section class="view wrap" id="view-convert" aria-labelledby="convert-title">
+      <header class="page-head">
+        <h1 id="convert-title">Convert</h1>
+        <p class="muted">Scans, photos and text files become PDFs you can search, copy from, and jump through by section.</p>
+      </header>
 
-  <main class="main">
-  <div class="wrap">
-    <section class="hero">
-      <h1>Make any document searchable.</h1>
-      <p class="lede">Turn scans, photos and text files into PDFs you can search, copy from, and jump through by section.</p>
-    </section>
+      <section class="card" aria-label="Upload files">
+        <label class="dropzone" id="dropzone" tabindex="0">
+          <input type="file" id="file-input" multiple hidden>
+          <span class="dz-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M9 4.5h9.5L25 11v15a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 7.5 26V6A1.5 1.5 0 0 1 9 4.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 4.5V11H25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 23v-8m0 0-3.25 3.25M16 15l3.25 3.25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="dz-text">
+            <span class="dz-title">Drop files to convert</span>
+            <span class="dz-sub muted" id="accepted-note">PDF, images and text files</span>
+            <span class="dz-sub muted dz-paste">Or paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
+          </span>
+          <span class="btn small dz-btn" aria-hidden="true">Choose files…</span>
+        </label>
 
-    <section class="card" aria-label="Upload files">
-      <label class="dropzone" id="dropzone" tabindex="0">
-        <input type="file" id="file-input" multiple hidden>
-        <span class="dz-badge" aria-hidden="true">
-          <svg class="dz-icon" viewBox="0 0 24 24"><path d="M12 15V4m0 0-4 4m4-4 4 4M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <span class="dz-title">Drop files here or <span class="link">browse</span></span>
-        <span class="dz-sub muted" id="accepted-note">PDF, images and text files</span>
-        <span class="dz-sub muted">You can also paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
-      </label>
+        <div id="staging" class="staging" hidden>
+          <ul id="staged-list" class="staged-list"></ul>
 
-      <div id="staging" class="staging" hidden>
-        <ul id="staged-list" class="staged-list"></ul>
-
-        <div class="options">
-          <fieldset class="opt opt-wide">
-            <legend>Languages</legend>
-            <div class="group group-pad">
-              <div id="languages" class="chips"></div>
-            </div>
-          </fieldset>
-
-          <fieldset class="opt">
-            <legend>OCR mode</legend>
-            <div class="group group-pad">
-              <div class="segmented" id="mode">
-                <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
-                <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
-                <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+          <div class="options">
+            <fieldset class="opt opt-wide">
+              <legend>Languages</legend>
+              <div class="group group-pad">
+                <div id="languages" class="chips"></div>
               </div>
-              <p class="hint muted" id="mode-hint"></p>
-            </div>
-          </fieldset>
+            </fieldset>
 
-          <fieldset class="opt">
-            <legend>Image cleanup</legend>
-            <div class="group">
-              <label class="toggle"><span>Auto-rotate pages</span><input type="checkbox" class="switch" id="opt-rotate" checked></label>
-              <label class="toggle"><span>Straighten (deskew)</span><input type="checkbox" class="switch" id="opt-deskew"></label>
-              <label class="toggle"><span>Clean noise before OCR</span><input type="checkbox" class="switch" id="opt-clean"></label>
-            </div>
-          </fieldset>
-
-          <fieldset class="opt opt-wide" id="combine-box" hidden>
-            <legend>Output</legend>
-            <div class="group">
-              <label class="toggle"><span>Combine into one PDF</span><input type="checkbox" class="switch" id="opt-combine"></label>
-              <div class="row-input">
-                <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+            <fieldset class="opt">
+              <legend>OCR mode</legend>
+              <div class="group group-pad">
+                <div class="segmented" id="mode">
+                  <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
+                  <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
+                  <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+                </div>
+                <p class="hint muted" id="mode-hint"></p>
               </div>
-            </div>
-          </fieldset>
-        </div>
+            </fieldset>
 
-        <div class="actions">
-          <button type="button" class="btn ghost" id="clear-staged">Clear</button>
-          <button type="button" class="btn primary" id="start">Process files</button>
+            <fieldset class="opt">
+              <legend>Image cleanup</legend>
+              <div class="group">
+                <label class="toggle"><span>Auto-rotate pages</span><input type="checkbox" class="switch" id="opt-rotate" checked></label>
+                <label class="toggle"><span>Straighten (deskew)</span><input type="checkbox" class="switch" id="opt-deskew"></label>
+                <label class="toggle"><span>Clean noise before OCR</span><input type="checkbox" class="switch" id="opt-clean"></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="opt opt-wide" id="combine-box" hidden>
+              <legend>Output</legend>
+              <div class="group">
+                <label class="toggle"><span>Combine into one PDF</span><input type="checkbox" class="switch" id="opt-combine"></label>
+                <div class="row-input">
+                  <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn ghost" id="clear-staged">Clear</button>
+            <button type="button" class="btn primary" id="start">Process files</button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section id="results" class="results" hidden aria-labelledby="results-title">
+        <div class="section-head">
+          <h2 id="results-title">This session</h2>
+          <button type="button" class="btn ghost small" id="clear-finished">Clear finished</button>
+        </div>
+        <ol id="job-list" class="job-list"></ol>
+      </section>
     </section>
 
-    <section id="results" class="results" hidden aria-labelledby="results-title">
-      <div class="results-head">
-        <h2 id="results-title">Results</h2>
-        <button type="button" class="btn ghost small" id="clear-finished">Clear finished</button>
+    <!-- ============================================================ Library -->
+    <section class="view wrap wrap-wide" id="view-library" aria-labelledby="library-title" hidden>
+      <header class="page-head lib-head">
+        <div>
+          <h1 id="library-title">Library</h1>
+          <p class="muted" id="library-sub">Converted files are kept in this browser.</p>
+        </div>
+        <div class="lib-tools">
+          <input type="search" id="lib-search" class="text-input search" placeholder="Search" aria-label="Search library">
+          <select id="lib-sort" class="text-input select" aria-label="Sort by">
+            <option value="date">Date</option>
+            <option value="name">Name</option>
+            <option value="pages">Pages</option>
+            <option value="size">Size</option>
+          </select>
+          <div class="segmented icon-seg" id="lib-view" role="radiogroup" aria-label="View">
+            <label title="Grid"><input type="radio" name="lib-view" value="grid" checked aria-label="Grid"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2"/></svg></span></label>
+            <label title="List"><input type="radio" name="lib-view" value="list" aria-label="List"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="2" rx="1"/><rect x="3" y="9" width="14" height="2" rx="1"/><rect x="3" y="14" width="14" height="2" rx="1"/></svg></span></label>
+          </div>
+        </div>
+      </header>
+
+      <ul class="lib-grid" id="lib-grid"></ul>
+
+      <div class="lib-table-wrap" id="lib-table-wrap" hidden>
+        <table class="lib-table">
+          <thead>
+            <tr>
+              <th scope="col" class="c-name"><button type="button" data-sort="name">Name</button></th>
+              <th scope="col" class="c-num"><button type="button" data-sort="pages">Pages</button></th>
+              <th scope="col" class="c-num"><button type="button" data-sort="size">Size</button></th>
+              <th scope="col" class="c-date"><button type="button" data-sort="date">Converted</button></th>
+              <th scope="col" class="c-act"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="lib-rows"></tbody>
+        </table>
       </div>
-      <ol id="job-list" class="job-list"></ol>
+
+      <div class="empty" id="lib-empty" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 7h14l10 10v23a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 7v10h10M18 26h12M18 32h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p class="empty-title" id="lib-empty-title">No documents yet</p>
+        <p class="muted" id="lib-empty-text">Files you convert are saved here, in this browser.</p>
+        <a class="btn primary small" href="#convert" id="lib-empty-cta">Convert a file</a>
+      </div>
+
+      <footer class="lib-foot" id="lib-foot" hidden>
+        <span class="muted small" id="storage-note"></span>
+        <button type="button" class="btn ghost small" id="clear-library">Delete all</button>
+      </footer>
     </section>
-  </div>
   </main>
 
-  <aside class="preview" id="preview" aria-label="Preview" hidden>
-    <div class="preview-head">
-      <div class="preview-title">
-        <div class="preview-name" id="preview-name"></div>
-        <div class="muted small" id="preview-meta"></div>
-      </div>
-      <button type="button" class="icon-btn" id="preview-close" aria-label="Close preview" title="Close">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-    </div>
-    <div class="preview-tools">
-      <div class="segmented" id="preview-tab">
-        <label><input type="radio" name="preview-tab" value="pdf" checked><span>PDF</span></label>
-        <label><input type="radio" name="preview-tab" value="text"><span>Text</span></label>
-      </div>
-      <select id="preview-sections" class="text-input select" aria-label="Jump to section" hidden></select>
-      <div class="preview-actions">
-        <a class="btn small" id="preview-open" target="_blank" rel="noopener" title="Open in a new tab">Open</a>
-        <a class="btn primary small" id="preview-dl" download>Download</a>
-      </div>
-    </div>
-    <div class="preview-body">
-      <iframe id="preview-frame" title="PDF preview"></iframe>
-      <div class="preview-text" id="preview-text" hidden>
-        <div class="text-tools">
-          <span class="muted small" id="text-note"></span>
-          <button type="button" class="btn ghost small" id="text-copy">Copy</button>
+  <!-- ============================================================ Viewer -->
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-name" hidden>
+    <div class="viewer-backdrop" id="viewer-backdrop"></div>
+    <div class="viewer-panel" id="viewer-panel">
+      <header class="viewer-bar">
+        <div class="viewer-title">
+          <div class="viewer-name" id="viewer-name"></div>
+          <div class="muted small" id="viewer-meta"></div>
         </div>
-        <pre id="text-body" tabindex="0"></pre>
+        <div class="segmented viewer-tab" id="viewer-tab">
+          <label><input type="radio" name="viewer-tab" value="pdf" checked><span>PDF</span></label>
+          <label><input type="radio" name="viewer-tab" value="text"><span>Text</span></label>
+        </div>
+        <div class="viewer-actions">
+          <a class="btn small" id="viewer-open" target="_blank" rel="noopener" title="Open in a new tab">Open</a>
+          <a class="btn primary small" id="viewer-dl" download>Download</a>
+          <button type="button" class="icon-btn" id="viewer-close" aria-label="Close" title="Close (Esc)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+      <div class="viewer-body">
+        <nav class="rail" id="rail" aria-label="Document navigation">
+          <div class="segmented rail-tab" id="rail-tab">
+            <label><input type="radio" name="rail-tab" value="pages" checked><span>Pages</span></label>
+            <label><input type="radio" name="rail-tab" value="sections"><span>Sections</span></label>
+          </div>
+          <ol class="pages" id="rail-pages"></ol>
+          <ol class="rail-sections" id="rail-sections" hidden></ol>
+        </nav>
+        <div class="stage">
+          <select id="viewer-sections" class="text-input select stage-sections" aria-label="Jump to section" hidden></select>
+          <div class="frame-box" id="frame-box">
+            <iframe id="viewer-frame" title="PDF document"></iframe>
+          </div>
+          <div class="viewer-text" id="viewer-text" hidden>
+            <div class="text-tools">
+              <span class="muted small" id="text-note"></span>
+              <button type="button" class="btn ghost small" id="text-copy">Copy</button>
+            </div>
+            <pre id="text-body" tabindex="0"></pre>
+          </div>
+        </div>
       </div>
     </div>
-  </aside>
   </div>
 
   <template id="job-template">
@@ -171,27 +222,23 @@
       <div class="job-done" hidden>
         <div class="job-meta muted small"></div>
         <div class="job-actions">
-          <button type="button" class="btn primary small show-preview">Preview</button>
+          <button type="button" class="btn primary small show-preview">View</button>
           <a class="btn small dl-pdf" download>Download PDF</a>
           <a class="btn small dl-txt" download>Text</a>
-          <button type="button" class="btn ghost small toggle-sections" aria-expanded="false">Sections</button>
         </div>
-        <ol class="outline" hidden></ol>
       </div>
       <div class="job-error" hidden></div>
     </li>
   </template>
 
-  <template id="history-template">
-    <li class="h-item">
-      <button type="button" class="h-open">
-        <span class="h-icon" aria-hidden="true"></span>
-        <span class="h-text">
-          <span class="h-name"></span>
-          <span class="h-meta muted small"></span>
-        </span>
+  <template id="tile-template">
+    <li class="tile">
+      <button type="button" class="tile-open">
+        <span class="thumb"><span class="thumb-ext" aria-hidden="true"></span></span>
+        <span class="tile-name"></span>
+        <span class="tile-meta muted small"></span>
       </button>
-      <button type="button" class="icon-btn h-remove" aria-label="Delete">
+      <button type="button" class="icon-btn tile-remove" aria-label="Delete" title="Delete">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </li>

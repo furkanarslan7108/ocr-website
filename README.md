@@ -46,8 +46,9 @@ Jobs live in a Docker volume and are deleted `JOB_TTL_MINUTES` after they finish
 Uploaded originals are deleted as soon as a job completes. Finished jobs survive a backend restart.
 
 When a job finishes, the frontend copies the PDF and text into the browser's IndexedDB, so the
-History sidebar and preview keep working after the server copy expires. Those copies stay on the
-user's device until they are deleted from History.
+Library and the viewer keep working after the server copy expires. Those copies stay on the
+user's device until they are deleted from the Library. Page thumbnails are rendered in the browser
+with PDF.js, vendored under `frontend/vendor/pdfjs/` (see `VERSION` there).
 
 ## Configuration
 
