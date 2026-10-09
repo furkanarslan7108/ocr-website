@@ -125,9 +125,10 @@ def _candidates(lines: list[Line], body: float, skip: set[str], allow_bold: bool
         depth = _numbering_depth(ln.text)
         words = len(ln.text.split())
         standalone = ln.block_lines <= 2
+        large = ratio >= SIZE_RATIO and words <= 14
         is_heading = (
             # Headings rarely start lowercase; skewed scans can inflate body-line sizes.
-            (ratio >= SIZE_RATIO and words <= 14 and not ln.text[0].islower())
+            (large and not ln.text[0].islower())
             or (
                 depth
                 and ratio >= 0.97
@@ -137,20 +138,24 @@ def _candidates(lines: list[Line], body: float, skip: set[str], allow_bold: bool
             )
             or (allow_bold and ln.bold and ratio >= 0.97 and ln.block_lines == 1 and 1 <= words <= 8)
         )
-        if not is_heading:
+        if not (is_heading or large):
             continue
         prev = out[-1] if out else None
-        # Join headings that wrap onto a second line.
+        # Join headings that wrap onto further lines. Tight leading makes the line boxes
+        # overlap, and a wrapped line may start lowercase ("Items that Won't / be priced").
         if (
             prev
             and prev.page == ln.page
             and not depth
+            and not prev.text.endswith(":")  # a label, not a wrapped title ("Website:" / "example.com")
             and min(prev.size, ln.size) / max(prev.size, ln.size) >= SAME_SIZE
-            and 0 <= ln.y0 - prev.y1 < 0.8 * ln.size
+            and -0.5 * ln.size <= ln.y0 - prev.y1 < 0.8 * ln.size
             and len(prev.text) + len(ln.text) < MAX_TITLE
         ):
             prev.text = f"{prev.text} {ln.text}"
             prev.y1 = ln.y1
+            continue
+        if not is_heading:
             continue
         out.append(Heading(ln.page, ln.text, ln.size, ln.y1, depth))
     return out
