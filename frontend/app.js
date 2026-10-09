@@ -57,11 +57,8 @@
     ttlNote: $("#ttl-note"),
     acceptedNote: $("#accepted-note"),
     topbar: $("#topbar"),
-    nav: $("#nav"),
     main: $("main"),
-    viewConvert: $("#view-convert"),
-    viewLibrary: $("#view-library"),
-    libraryCount: $("#library-count"),
+    library: $("#library"),
     librarySub: $("#library-sub"),
     libSearch: $("#lib-search"),
     libSort: $("#lib-sort"),
@@ -72,7 +69,6 @@
     libEmpty: $("#lib-empty"),
     libEmptyTitle: $("#lib-empty-title"),
     libEmptyText: $("#lib-empty-text"),
-    libEmptyCta: $("#lib-empty-cta"),
     libFoot: $("#lib-foot"),
     storageNote: $("#storage-note"),
     clearLibrary: $("#clear-library"),
@@ -325,24 +321,6 @@
     loadLibrary();
   }
 
-  // ---------------------------------------------------------------- views
-
-  function currentView() {
-    return location.hash === "#library" ? "library" : "convert";
-  }
-
-  function showView() {
-    const view = currentView();
-    el.viewConvert.hidden = view !== "convert";
-    el.viewLibrary.hidden = view !== "library";
-    for (const a of el.nav.querySelectorAll("a")) {
-      if (a.dataset.view === view) a.setAttribute("aria-current", "page");
-      else a.removeAttribute("aria-current");
-    }
-    document.title = view === "library" ? "Library — OCR Desk" : "OCR Desk";
-    window.scrollTo(0, 0);
-  }
-
   // ---------------------------------------------------------------- library
 
   async function loadLibrary() {
@@ -381,7 +359,6 @@
   function renderLibrary() {
     const items = sortedLibrary();
     const n = library.length;
-    el.libraryCount.textContent = n ? String(n) : "";
     const total = library.reduce((s, m) => s + (m.size || 0), 0);
     el.librarySub.textContent = n
       ? `${n} document${n === 1 ? "" : "s"}, kept in this browser.`
@@ -398,7 +375,6 @@
       el.libEmptyTitle.textContent = "No documents yet";
       el.libEmptyText.textContent = "Files you convert are saved here, in this browser.";
     }
-    el.libEmptyCta.hidden = searching;
 
     const grid = libState.view === "grid";
     el.libGrid.hidden = !grid || !items.length;
@@ -542,7 +518,7 @@
   }
 
   function markActive() {
-    for (const node of el.viewLibrary.querySelectorAll("[data-id]")) node.classList.toggle("active", node.dataset.id === current?.id);
+    for (const node of el.library.querySelectorAll("[data-id]")) node.classList.toggle("active", node.dataset.id === current?.id);
   }
 
   // ---------------------------------------------------------------- viewer
@@ -879,7 +855,6 @@
       else if (!staged.some((s) => s.name === f.name && s.size === f.size && s.lastModified === f.lastModified)) staged.push(f);
     }
     if (rejected.length) alertInline(`Skipped: ${rejected.join(", ")}`);
-    if (currentView() !== "convert" && staged.length) location.hash = "#convert";
     renderStaged();
   }
 
@@ -1035,7 +1010,7 @@
 
   function shouldAutoOpen() {
     // Pop the viewer only when it won't interrupt anything.
-    return el.viewer.hidden && !staged.length && currentView() === "convert" && !document.hidden;
+    return el.viewer.hidden && !staged.length && !document.hidden;
   }
 
   function updateJob(job, data) {
@@ -1203,8 +1178,6 @@
       }
     });
 
-    window.addEventListener("hashchange", showView);
-
     el.libSearch.addEventListener("input", renderLibrary);
     el.libSort.addEventListener("change", () => setSort(el.libSort.value, false));
     el.libView.addEventListener("change", (e) => {
@@ -1245,7 +1218,6 @@
 
   async function init() {
     wire();
-    showView();
     // Ask the browser not to evict saved documents under storage pressure (best effort).
     navigator.storage?.persist?.().catch(() => {});
     await loadLibrary();

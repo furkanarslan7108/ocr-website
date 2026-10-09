@@ -117,7 +117,7 @@ kbd {
 .topbar.scrolled { box-shadow: 0 1px 0 var(--separator); }
 .topbar-inner {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 0.75rem;
   height: var(--bar-h);
@@ -132,51 +132,10 @@ kbd {
 .brand img { border-radius: 6px; }
 #ttl-note { justify-self: end; font-weight: 450; text-align: right; }
 
-/* Convert | Library switcher, drawn like a segmented control. */
-.nav {
-  --index: 0;
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 2px;
-  border-radius: 0.5625rem;
-  background: var(--fill);
-}
-.nav:has(a[data-view="library"][aria-current]) { --index: 1; }
-.nav::before {
-  content: "";
-  position: absolute;
-  top: 2px; bottom: 2px; left: 2px;
-  width: calc((100% - 4px) / 2);
-  border-radius: 0.4375rem;
-  background: var(--surface);
-  box-shadow: var(--shadow-thumb);
-  transform: translateX(calc(100% * var(--index)));
-  transition: transform var(--dur) var(--ease-spring);
-}
-@media (prefers-color-scheme: dark) { .nav::before { background: #636366; } }
-.nav a {
-  position: relative;
-  z-index: 1;
-  display: flex; align-items: center; justify-content: center; gap: 0.375rem;
-  padding: 0.3125rem 1.25rem;
-  border-radius: 0.4375rem;
-  color: var(--text);
-  font-size: 0.875rem; font-weight: 500;
-  text-decoration: none;
-  user-select: none;
-  transition: opacity var(--dur-fast) ease;
-}
-.nav a:active { opacity: 0.6; }
-.nav a[aria-current] { font-weight: 600; }
-.nav a:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
-.nav-count { color: var(--muted); font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.nav-count:empty { display: none; }
 
 /* ---------- pages */
 
 .view { container-type: inline-size; padding-bottom: 4rem; }
-.wrap-wide { max-width: 72rem; }
 .page-head { padding: 2.5rem 0 1.5rem; }
 .page-head h1 { margin: 0; font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.025em; }
 .page-head p { margin: 0.375rem 0 0; max-width: 36rem; font-size: 1.0625rem; line-height: 1.4; letter-spacing: -0.015em; text-wrap: pretty; }
@@ -228,7 +187,10 @@ kbd {
 
 /* ---------- library */
 
-.lib-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; }
+.library { margin: 3rem 0 0; }
+.lib-head h2 { font-size: 1.25rem; line-height: 1.2; font-weight: 700; letter-spacing: -0.022em; margin: 0; }
+.lib-head p { margin: 0.125rem 0 0; }
+.lib-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; margin: 0 0 1.25rem 0.25rem; }
 .lib-tools { display: flex; align-items: center; gap: 0.5rem; }
 .lib-tools .search { width: 14rem; padding: 0.4375rem 0.75rem; background: var(--fill); box-shadow: none; }
 .lib-tools .search:focus { background: var(--surface); }
@@ -844,7 +806,7 @@ body.viewer-open { overflow: hidden; }
     animation-duration: 150ms !important;
     animation-iteration-count: 1 !important;
   }
-  .btn:active, .icon-btn:active, .chip span:active, .dropzone:active .dz-btn, .nav a:active, .tile-open:hover .thumb > *, .tile-open:active .thumb > *, .job-icon.has-thumb:hover img { transform: none; }
+  .btn:active, .icon-btn:active, .chip span:active, .dropzone:active .dz-btn, .tile-open:hover .thumb > *, .tile-open:active .thumb > *, .job-icon.has-thumb:hover img { transform: none; }
   .job[data-status="queued"] .bar span { animation: none !important; background: var(--fill-strong); }
 }
 
@@ -857,7 +819,7 @@ body.viewer-open { overflow: hidden; }
 @media (prefers-contrast: more) {
   :root { --separator: rgb(0 0 0 / 40%); --muted: #3a3a3c; --fill: rgb(120 120 128 / 22%); }
   .topbar { background: var(--bg); box-shadow: 0 1px 0 var(--separator); }
-  .card, .job, .group, .viewer-panel, .lib-table-wrap, .nav, .chip span, .btn:not(.primary), .text-input, .dropzone { box-shadow: 0 0 0 1px var(--separator); }
+  .card, .job, .group, .viewer-panel, .lib-table-wrap, .chip span, .btn:not(.primary), .text-input, .dropzone { box-shadow: 0 0 0 1px var(--separator); }
 }
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
   :root { --separator: rgb(255 255 255 / 45%); --muted: #c7c7cc; }

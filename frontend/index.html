@@ -12,14 +12,10 @@
 <body>
   <header class="topbar" id="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="#convert">
+      <a class="brand" href="./">
         <img src="favicon.svg" alt="" width="24" height="24">
         <span>OCR Desk</span>
       </a>
-      <nav class="nav" id="nav" aria-label="Sections">
-        <a href="#convert" data-view="convert">Convert</a>
-        <a href="#library" data-view="library">Library<span class="nav-count" id="library-count"></span></a>
-      </nav>
       <span class="muted small" id="ttl-note"></span>
     </div>
   </header>
@@ -103,58 +99,56 @@
         </div>
         <ol id="job-list" class="job-list"></ol>
       </section>
-    </section>
 
-    <!-- ============================================================ Library -->
-    <section class="view wrap wrap-wide" id="view-library" aria-labelledby="library-title" hidden>
-      <header class="page-head lib-head">
-        <div>
-          <h1 id="library-title">Library</h1>
-          <p class="muted" id="library-sub">Converted files are kept in this browser.</p>
-        </div>
-        <div class="lib-tools">
-          <input type="search" id="lib-search" class="text-input search" placeholder="Search" aria-label="Search library">
-          <select id="lib-sort" class="text-input select" aria-label="Sort by">
-            <option value="date">Date</option>
-            <option value="name">Name</option>
-            <option value="pages">Pages</option>
-            <option value="size">Size</option>
-          </select>
-          <div class="segmented icon-seg" id="lib-view" role="radiogroup" aria-label="View">
-            <label title="Grid"><input type="radio" name="lib-view" value="grid" checked aria-label="Grid"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2"/></svg></span></label>
-            <label title="List"><input type="radio" name="lib-view" value="list" aria-label="List"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="2" rx="1"/><rect x="3" y="9" width="14" height="2" rx="1"/><rect x="3" y="14" width="14" height="2" rx="1"/></svg></span></label>
+      <section class="library" id="library" aria-labelledby="library-title">
+        <header class="lib-head">
+          <div>
+            <h2 id="library-title">Library</h2>
+            <p class="muted small" id="library-sub">Converted files are kept in this browser.</p>
           </div>
+          <div class="lib-tools">
+            <input type="search" id="lib-search" class="text-input search" placeholder="Search" aria-label="Search library">
+            <select id="lib-sort" class="text-input select" aria-label="Sort by">
+              <option value="date">Date</option>
+              <option value="name">Name</option>
+              <option value="pages">Pages</option>
+              <option value="size">Size</option>
+            </select>
+            <div class="segmented icon-seg" id="lib-view" role="radiogroup" aria-label="View">
+              <label title="Grid"><input type="radio" name="lib-view" value="grid" checked aria-label="Grid"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2"/></svg></span></label>
+              <label title="List"><input type="radio" name="lib-view" value="list" aria-label="List"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="2" rx="1"/><rect x="3" y="9" width="14" height="2" rx="1"/><rect x="3" y="14" width="14" height="2" rx="1"/></svg></span></label>
+            </div>
+          </div>
+        </header>
+
+        <ul class="lib-grid" id="lib-grid"></ul>
+
+        <div class="lib-table-wrap" id="lib-table-wrap" hidden>
+          <table class="lib-table">
+            <thead>
+              <tr>
+                <th scope="col" class="c-name"><button type="button" data-sort="name">Name</button></th>
+                <th scope="col" class="c-num"><button type="button" data-sort="pages">Pages</button></th>
+                <th scope="col" class="c-num"><button type="button" data-sort="size">Size</button></th>
+                <th scope="col" class="c-date"><button type="button" data-sort="date">Converted</button></th>
+                <th scope="col" class="c-act"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="lib-rows"></tbody>
+          </table>
         </div>
-      </header>
 
-      <ul class="lib-grid" id="lib-grid"></ul>
+        <div class="empty" id="lib-empty" hidden>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 7h14l10 10v23a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 7v10h10M18 26h12M18 32h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p class="empty-title" id="lib-empty-title">No documents yet</p>
+          <p class="muted" id="lib-empty-text">Files you convert are saved here, in this browser.</p>
+        </div>
 
-      <div class="lib-table-wrap" id="lib-table-wrap" hidden>
-        <table class="lib-table">
-          <thead>
-            <tr>
-              <th scope="col" class="c-name"><button type="button" data-sort="name">Name</button></th>
-              <th scope="col" class="c-num"><button type="button" data-sort="pages">Pages</button></th>
-              <th scope="col" class="c-num"><button type="button" data-sort="size">Size</button></th>
-              <th scope="col" class="c-date"><button type="button" data-sort="date">Converted</button></th>
-              <th scope="col" class="c-act"><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="lib-rows"></tbody>
-        </table>
-      </div>
-
-      <div class="empty" id="lib-empty" hidden>
-        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 7h14l10 10v23a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 7v10h10M18 26h12M18 32h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <p class="empty-title" id="lib-empty-title">No documents yet</p>
-        <p class="muted" id="lib-empty-text">Files you convert are saved here, in this browser.</p>
-        <a class="btn primary small" href="#convert" id="lib-empty-cta">Convert a file</a>
-      </div>
-
-      <footer class="lib-foot" id="lib-foot" hidden>
-        <span class="muted small" id="storage-note"></span>
-        <button type="button" class="btn ghost small" id="clear-library">Delete all</button>
-      </footer>
+        <footer class="lib-foot" id="lib-foot" hidden>
+          <span class="muted small" id="storage-note"></span>
+          <button type="button" class="btn ghost small" id="clear-library">Delete all</button>
+        </footer>
+      </section>
     </section>
   </main>
 
