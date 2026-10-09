@@ -42,10 +42,12 @@
     template: $("#job-template"),
     ttlNote: $("#ttl-note"),
     acceptedNote: $("#accepted-note"),
+    topbar: $("#topbar"),
   };
 
   let config = { languages: ["eng"], default_language: "eng", accepted_extensions: [], max_file_mb: 100, max_files_per_job: 20 };
   let staged = [];
+  const shownStaged = new WeakSet(); // files whose chip has already animated in
   const jobs = new Map(); // id -> { data, node, refs }
   let pollTimer = null;
 
@@ -165,6 +167,8 @@
     el.stagedList.replaceChildren(
       ...staged.map((f, i) => {
         const li = document.createElement("li");
+        if (shownStaged.has(f)) li.style.animation = "none";
+        shownStaged.add(f);
         const name = document.createElement("span");
         name.className = "name";
         name.textContent = f.name;
@@ -377,11 +381,21 @@
     job.outlineRendered = true;
   }
 
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
   async function removeJob(job) {
-    job.node.remove();
     jobs.delete(job.id);
     persistJobs();
-    el.results.hidden = jobs.size === 0;
+    // Leave along the path it arrived on (up and out), starting from where it is now.
+    const exit = reducedMotion.matches
+      ? [{ opacity: 1 }, { opacity: 0 }]
+      : [{}, { opacity: 0, transform: "translateY(-0.75rem) scale(0.98)" }];
+    job.node.style.pointerEvents = "none";
+    job.node.animate(exit, { duration: reducedMotion.matches ? 150 : 220, easing: "cubic-bezier(0.32, 0.72, 0, 1)", fill: "forwards" })
+      .finished.catch(() => {}).then(() => {
+        job.node.remove();
+        el.results.hidden = jobs.size === 0;
+      });
     if (!job.id.startsWith("tmp-")) {
       try { await api(`jobs/${job.id}`, { method: "DELETE" }); } catch { /* already gone */ }
     }
@@ -470,6 +484,9 @@
         if (job.data.status === "done" || job.data.status === "error") removeJob(job);
       }
     });
+    const syncTopbar = () => el.topbar.classList.toggle("scrolled", window.scrollY > 4);
+    window.addEventListener("scroll", syncTopbar, { passive: true });
+    syncTopbar();
     document.addEventListener("visibilitychange", () => { if (!document.hidden) schedulePoll(0); });
   }
 

@@ -10,10 +10,10 @@
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" id="topbar">
     <div class="wrap topbar-inner">
       <a class="brand" href="./">
-        <img src="favicon.svg" alt="" width="26" height="26">
+        <img src="favicon.svg" alt="" width="24" height="24">
         <span>OCR Desk</span>
       </a>
       <span class="muted small" id="ttl-note"></span>
@@ -21,12 +21,18 @@
   </header>
 
   <main class="wrap">
-    <section class="card" aria-labelledby="upload-title">
-      <h1 id="upload-title" class="visually-hidden">Upload files</h1>
+    <section class="hero">
+      <h1>Make any document searchable.</h1>
+      <p class="lede">Turn scans, photos and text files into PDFs you can search, copy from, and jump through by section.</p>
+    </section>
+
+    <section class="card" aria-label="Upload files">
       <label class="dropzone" id="dropzone" tabindex="0">
         <input type="file" id="file-input" multiple hidden>
-        <svg class="dz-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="dz-title">Drop files here or <u>browse</u></span>
+        <span class="dz-badge" aria-hidden="true">
+          <svg class="dz-icon" viewBox="0 0 24 24"><path d="M12 15V4m0 0-4 4m4-4 4 4M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="dz-title">Drop files here or <span class="link">browse</span></span>
         <span class="dz-sub muted" id="accepted-note">PDF, images and text files</span>
         <span class="dz-sub muted">You can also paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
       </label>
@@ -35,32 +41,42 @@
         <ul id="staged-list" class="staged-list"></ul>
 
         <div class="options">
-          <fieldset class="opt">
+          <fieldset class="opt opt-wide">
             <legend>Languages</legend>
-            <div id="languages" class="chips"></div>
+            <div class="group group-pad">
+              <div id="languages" class="chips"></div>
+            </div>
           </fieldset>
 
           <fieldset class="opt">
             <legend>OCR mode</legend>
-            <div class="segmented" id="mode">
-              <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
-              <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
-              <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+            <div class="group group-pad">
+              <div class="segmented" id="mode">
+                <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
+                <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
+                <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+              </div>
+              <p class="hint muted" id="mode-hint"></p>
             </div>
-            <p class="hint muted" id="mode-hint"></p>
           </fieldset>
 
           <fieldset class="opt">
             <legend>Image cleanup</legend>
-            <label class="toggle"><input type="checkbox" id="opt-rotate" checked><span>Auto-rotate pages</span></label>
-            <label class="toggle"><input type="checkbox" id="opt-deskew"><span>Straighten (deskew)</span></label>
-            <label class="toggle"><input type="checkbox" id="opt-clean"><span>Clean noise before OCR</span></label>
+            <div class="group">
+              <label class="toggle"><span>Auto-rotate pages</span><input type="checkbox" class="switch" id="opt-rotate" checked></label>
+              <label class="toggle"><span>Straighten (deskew)</span><input type="checkbox" class="switch" id="opt-deskew"></label>
+              <label class="toggle"><span>Clean noise before OCR</span><input type="checkbox" class="switch" id="opt-clean"></label>
+            </div>
           </fieldset>
 
-          <fieldset class="opt" id="combine-box" hidden>
+          <fieldset class="opt opt-wide" id="combine-box" hidden>
             <legend>Output</legend>
-            <label class="toggle"><input type="checkbox" id="opt-combine"><span>Combine into one PDF</span></label>
-            <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+            <div class="group">
+              <label class="toggle"><span>Combine into one PDF</span><input type="checkbox" class="switch" id="opt-combine"></label>
+              <div class="row-input">
+                <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+              </div>
+            </div>
           </fieldset>
         </div>
 
