@@ -184,8 +184,8 @@
         </nav>
         <div class="stage">
           <select id="viewer-sections" class="text-input select stage-sections" aria-label="Jump to section" hidden></select>
-          <div class="frame-box" id="frame-box">
-            <iframe id="viewer-frame" title="PDF document"></iframe>
+          <div class="doc-view" id="doc-view" tabindex="0" role="document" aria-label="PDF document">
+            <ol class="doc-pages" id="doc-pages"></ol>
           </div>
           <div class="viewer-text" id="viewer-text" hidden>
             <div class="text-tools">

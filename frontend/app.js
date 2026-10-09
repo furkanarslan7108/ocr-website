@@ -9,6 +9,7 @@
   const POLL_HIDDEN_MS = 3000;
   const THUMB_W = 360; // library thumbnail width in px (cards show ~180 CSS px)
   const RAIL_W = 120; // page strip thumbnail width in CSS px
+  const PAGE_MAX_W = 960; // widest a page is drawn in the viewer, in CSS px
   const A4 = 297 / 210;
 
   const LANG_NAMES = {
@@ -87,8 +88,8 @@
     railPages: $("#rail-pages"),
     railSections: $("#rail-sections"),
     viewerSections: $("#viewer-sections"),
-    frameBox: $("#frame-box"),
-    viewerFrame: $("#viewer-frame"),
+    docView: $("#doc-view"),
+    docPages: $("#doc-pages"),
     viewerText: $("#viewer-text"),
     textNote: $("#text-note"),
     textBody: $("#text-body"),
@@ -571,11 +572,13 @@
       .filter(Boolean).join(" · ");
 
     buildSections(r);
-    buildPageStrip(src);
+    const docPromise = src.loadPdf().then(openPdf);
+    viewerDoc = docPromise;
+    buildPageStrip(src, docPromise);
+    buildStage(src, docPromise);
     setViewerTab("pdf");
     el.textBody.textContent = "";
     el.textBody.dataset.loaded = "";
-    showPdfPage(page || 1, Boolean(page));
 
     if (opening) {
       lastFocus = document.activeElement;
@@ -592,6 +595,8 @@
       }
       el.viewerClose.focus({ preventScroll: true });
     }
+    // Positions are only known once the viewer is visible.
+    showPdfPage(page || 1, Boolean(page));
     markActive();
   }
 
@@ -634,7 +639,7 @@
     setRailTab(hasSections && r.pages > 1 && sections.length > 1 ? "sections" : "pages");
   }
 
-  function buildPageStrip(src) {
+  function buildPageStrip(src, docPromise) {
     const total = src.result.pages;
     const ratio = src.ratio || A4;
     el.railPages.style.setProperty("--ratio", String(Math.min(ratio, 1.6)));
@@ -655,8 +660,6 @@
     el.railPages.scrollTop = 0;
 
     // Render thumbnails lazily as they scroll into view.
-    const docPromise = src.loadPdf().then(openPdf);
-    viewerDoc = docPromise;
     docPromise.catch(() => {
       if (viewerDoc !== docPromise) return;
       el.railPages.classList.add("no-render");
@@ -679,9 +682,98 @@
     for (const btn of el.railPages.querySelectorAll(".page")) pageObserver.observe(btn);
   }
 
+  // The main view: one slot per page, sized up front so jumps are just a scroll. Pages near
+  // the viewport get a canvas plus a text layer (OCR text stays selectable); pages that
+  // scroll far away drop them again so long documents stay light.
+  let stageObserver = null;
+  let stageResize = null;
+  let stageWidth = 0;
+  let shownPage = 0;
+  let scrollFrame = 0;
+  let jumpTop = -1; // scroll position set by the last jump; tracking leaves its highlight alone
+
+  function buildStage(src, docPromise) {
+    const total = src.result.pages;
+    const ratio = String(src.ratio || A4);
+    const slots = [];
+    for (let n = 1; n <= total; n++) {
+      const li = document.createElement("li");
+      li.className = "doc-page";
+      li.dataset.page = n;
+      li.style.setProperty("--ratio", ratio);
+      li.setAttribute("aria-label", `Page ${n}`);
+      slots.push(li);
+    }
+    el.docPages.replaceChildren(...slots);
+    el.docView.scrollTop = 0;
+    shownPage = 0;
+    stageWidth = 0;
+
+    docPromise.then(async (doc) => {
+      // Exact page shapes, so mixed-size documents still land on the right spot.
+      for (const slot of slots) {
+        if (viewerDoc !== docPromise) return;
+        const page = await doc.getPage(Number(slot.dataset.page));
+        const { width, height } = page.getViewport({ scale: 1 });
+        slot.style.setProperty("--ratio", String(height / width));
+      }
+    }).catch(() => {
+      if (viewerDoc !== docPromise) return;
+      const p = document.createElement("p");
+      p.className = "doc-error muted";
+      p.textContent = "This PDF can't be shown here. Use Open to view it in your browser.";
+      el.docPages.replaceChildren(p);
+    });
+
+    stageObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const slot = entry.target;
+        if (!entry.isIntersecting) {
+          if (slot.dataset.drawn) { slot.replaceChildren(); delete slot.dataset.drawn; }
+          continue;
+        }
+        if (slot.dataset.drawn === String(stageWidth)) continue;
+        const width = stageWidth;
+        slot.dataset.drawn = width;
+        docPromise.then((doc) => renderStagePage(doc, Number(slot.dataset.page), width)).then((layers) => {
+          if (viewerDoc !== docPromise || slot.dataset.drawn !== String(width)) return;
+          slot.replaceChildren(...layers);
+        }).catch(() => {});
+      }
+    }, { root: el.docView, rootMargin: "100% 0px" });
+
+    stageResize = new ResizeObserver(fitStage);
+    stageResize.observe(el.docView);
+  }
+
+  function fitStage() {
+    const width = Math.min(PAGE_MAX_W, Math.max(200, el.docView.clientWidth - 32));
+    if (!stageObserver || !el.docView.clientWidth || width === stageWidth) return;
+    stageWidth = width;
+    el.docPages.style.setProperty("--page-w", `${width}px`);
+    // Redraw at the new width: re-observing reports the visible pages again.
+    for (const slot of el.docPages.children) { stageObserver.unobserve(slot); stageObserver.observe(slot); }
+  }
+
+  async function renderStagePage(doc, number, width) {
+    const lib = await pdfjs();
+    const canvas = await renderPage(doc, number, Math.round(width * Math.min(window.devicePixelRatio || 1, 2)));
+    const page = await doc.getPage(number);
+    const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+    const text = document.createElement("div");
+    text.className = "textLayer";
+    text.style.setProperty("--scale-factor", String(viewport.scale));
+    await new lib.TextLayer({ textContentSource: page.streamTextContent(), container: text, viewport }).render();
+    return [canvas, text];
+  }
+
   function teardownDocument() {
     pageObserver?.disconnect();
     pageObserver = null;
+    stageObserver?.disconnect();
+    stageObserver = null;
+    stageResize?.disconnect();
+    stageResize = null;
     const doc = viewerDoc;
     viewerDoc = null;
     el.railPages.classList.remove("no-render");
@@ -690,35 +782,49 @@
 
   function showPdfPage(page, scroll = true) {
     if (!current) return;
-    loadFrame(`${current.pdfUrl}#page=${page}&navpanes=0`);
-    el.viewerOpen.href = `${current.pdfUrl}#page=${page}`;
-    for (const b of el.railPages.querySelectorAll(".page.active")) b.classList.remove("active");
-    const btn = el.railPages.querySelector(`.page[data-page="${page}"]`);
-    if (btn) {
-      btn.classList.add("active");
-      if (scroll) btn.scrollIntoView({ block: "nearest", behavior: reducedMotion.matches ? "auto" : "smooth" });
+    fitStage(); // page sizes must be final before measuring where to scroll
+    const slot = el.docPages.querySelector(`.doc-page[data-page="${page}"]`);
+    if (slot) {
+      el.docView.scrollTop = slot.offsetTop - 16;
+      jumpTop = el.docView.scrollTop;
     }
+    markPage(page, scroll ? (reducedMotion.matches ? "auto" : "smooth") : null);
     if (!el.viewerText.hidden) return;
     el.viewerDl.href = current.pdfUrl;
     el.viewerDl.download = current.name;
   }
 
-  // The fragment is understood by the built-in PDF viewers (Chrome, Firefox, Safari), but
-  // changing only the fragment of an open viewer does not move it, so each jump loads a
-  // new frame (the PDF is already in memory) and swaps it in when it is ready.
-  function loadFrame(url) {
-    const next = el.viewerFrame.cloneNode(false);
-    next.classList.add("loading");
-    next.src = url;
-    for (const f of el.frameBox.querySelectorAll("iframe.loading")) f.remove();
-    el.frameBox.append(next);
-    el.viewerFrame = next;
-    // "load" fires when the viewer shell is up, a moment before the page is drawn.
-    next.addEventListener("load", () => setTimeout(() => {
-      if (el.viewerFrame !== next) return;
-      next.classList.remove("loading");
-      for (const f of el.frameBox.querySelectorAll("iframe")) if (f !== next) f.remove();
-    }, 250), { once: true });
+  // Highlight the page being read in the strip; scrollRail is a scroll behavior, or null.
+  function markPage(page, scrollRail) {
+    if (page === shownPage) return;
+    shownPage = page;
+    el.viewerOpen.href = `${current.pdfUrl}#page=${page}`;
+    for (const b of el.railPages.querySelectorAll(".page.active")) b.classList.remove("active");
+    const btn = el.railPages.querySelector(`.page[data-page="${page}"]`);
+    if (!btn) return;
+    btn.classList.add("active");
+    if (scrollRail) btn.scrollIntoView({ block: "nearest", behavior: scrollRail });
+  }
+
+  // The page whose slot crosses the upper third of the view counts as the one being read.
+  function trackScroll() {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = 0;
+      if (!current || el.docView.hidden) return;
+      // Pages near the end can't reach the top, so the jump target keeps the highlight.
+      if (el.docView.scrollTop === jumpTop) return;
+      jumpTop = -1;
+      const slots = el.docPages.children;
+      const y = el.docView.scrollTop + el.docView.clientHeight / 3;
+      let lo = 0, hi = slots.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (slots[mid].offsetTop <= y) lo = mid; else hi = mid - 1;
+      }
+      const page = Number(slots[lo]?.dataset.page);
+      if (page) markPage(page, "auto");
+    });
   }
 
   function setRailTab(tab) {
@@ -730,7 +836,7 @@
   async function setViewerTab(tab) {
     el.viewerTab.querySelector(`input[value="${tab}"]`).checked = true;
     const text = tab === "text";
-    el.frameBox.hidden = text;
+    el.docView.hidden = text;
     el.viewerText.hidden = !text;
     el.viewerSections.disabled = text;
     if (!current) return;
@@ -765,9 +871,7 @@
       document.body.classList.remove("viewer-open");
       el.main.inert = false;
       el.topbar.inert = false;
-      for (const f of el.frameBox.querySelectorAll("iframe")) if (f !== el.viewerFrame) f.remove();
-      el.viewerFrame.classList.remove("loading");
-      el.viewerFrame.removeAttribute("src");
+      el.docPages.replaceChildren();
       src.revoke();
       lastFocus?.focus?.({ preventScroll: true });
     };
@@ -1193,6 +1297,7 @@
     el.viewerClose.addEventListener("click", closeViewer);
     el.viewerBackdrop.addEventListener("click", closeViewer);
     el.viewerTab.addEventListener("change", (e) => setViewerTab(e.target.value));
+    el.docView.addEventListener("scroll", trackScroll, { passive: true });
     el.railTab.addEventListener("change", (e) => setRailTab(e.target.value));
     el.viewerSections.addEventListener("change", () => {
       const page = Number(el.viewerSections.value);

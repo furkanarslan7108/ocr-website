@@ -39,6 +39,7 @@ class Line:
     y0: float
     y1: float
     block_lines: int
+    row_cells: int  # lines of the same block sharing this line's row (>1 in tables)
 
 
 @dataclass
@@ -58,16 +59,16 @@ def _iter_lines(doc: pymupdf.Document):
         for block in data["blocks"]:
             if block.get("type") != 0:
                 continue
-            lines = block["lines"]
+            lines = [ln for ln in block["lines"] if any(s["text"].strip() for s in ln["spans"])]
             for line in lines:
                 spans = [s for s in line["spans"] if s["text"].strip()]
-                if not spans:
-                    continue
+                mid = (line["bbox"][1] + line["bbox"][3]) / 2
+                row_cells = sum(other["bbox"][1] < mid < other["bbox"][3] for other in lines)
                 text = " ".join("".join(s["text"] for s in spans).split())
                 weight = sum(len(s["text"].strip()) for s in spans) or 1
                 size = sum(s["size"] * len(s["text"].strip()) for s in spans) / weight
                 bold = all((s["flags"] & 16) or "bold" in s["font"].lower() for s in spans)
-                yield Line(pno, text, size, bold, line["bbox"][1], line["bbox"][3], len(lines))
+                yield Line(pno, text, size, bold, line["bbox"][1], line["bbox"][3], len(lines), row_cells)
 
 
 def _body_size(lines: list[Line]) -> float:
@@ -119,7 +120,8 @@ def _numbering_depth(text: str) -> int:
 def _candidates(lines: list[Line], body: float, skip: set[str], allow_bold: bool) -> list[Heading]:
     out: list[Heading] = []
     for ln in lines:
-        if not _plausible(ln.text) or _norm(ln.text) in skip:
+        # Cells of a table row ("Name  Price  Page  MM Page") are column labels, not headings.
+        if not _plausible(ln.text) or _norm(ln.text) in skip or ln.row_cells >= 3:
             continue
         ratio = ln.size / body
         depth = _numbering_depth(ln.text)
