@@ -45,6 +45,10 @@ browser ──► nginx :80 ──► static frontend (vanilla JS, no build step
 Jobs live in a Docker volume and are deleted `JOB_TTL_MINUTES` after they finish (default 2 h).
 Uploaded originals are deleted as soon as a job completes. Finished jobs survive a backend restart.
 
+When a job finishes, the frontend copies the PDF and text into the browser's IndexedDB, so the
+History sidebar and preview keep working after the server copy expires. Those copies stay on the
+user's device until they are deleted from History.
+
 ## Configuration
 
 All settings are environment variables. See [`.env.example`](.env.example).

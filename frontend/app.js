@@ -4,6 +4,7 @@
   const API = "api";
   const STORE_JOBS = "ocrdesk.jobs";
   const STORE_OPTS = "ocrdesk.options";
+  const STORE_SIDEBAR = "ocrdesk.sidebar";
   const POLL_MS = 700;
   const POLL_HIDDEN_MS = 3000;
 
@@ -43,6 +44,30 @@
     ttlNote: $("#ttl-note"),
     acceptedNote: $("#accepted-note"),
     topbar: $("#topbar"),
+    shell: $("#shell"),
+    sidebar: $("#sidebar"),
+    toggleSidebar: $("#toggle-sidebar"),
+    scrim: $("#scrim"),
+    history: $("#history"),
+    historyEmpty: $("#history-empty"),
+    historyCount: $("#history-count"),
+    historySearch: $("#history-search"),
+    historyTemplate: $("#history-template"),
+    storageNote: $("#storage-note"),
+    clearHistory: $("#clear-history"),
+    preview: $("#preview"),
+    previewName: $("#preview-name"),
+    previewMeta: $("#preview-meta"),
+    previewClose: $("#preview-close"),
+    previewTab: $("#preview-tab"),
+    previewSections: $("#preview-sections"),
+    previewOpen: $("#preview-open"),
+    previewDl: $("#preview-dl"),
+    previewFrame: $("#preview-frame"),
+    previewText: $("#preview-text"),
+    textNote: $("#text-note"),
+    textBody: $("#text-body"),
+    textCopy: $("#text-copy"),
   };
 
   let config = { languages: ["eng"], default_language: "eng", accepted_extensions: [], max_file_mb: 100, max_files_per_job: 20 };
@@ -50,6 +75,8 @@
   const shownStaged = new WeakSet(); // files whose chip has already animated in
   const jobs = new Map(); // id -> { data, node, refs }
   let pollTimer = null;
+  let history = []; // saved conversions (metadata only), newest first
+  let current = null; // what the preview shows: { id, name, result, pdfUrl, txtUrl, loadText, revoke }
 
   // ---------------------------------------------------------------- utils
 
@@ -72,6 +99,26 @@
     return s < 60 ? `${s.toFixed(1)} s` : `${Math.floor(s / 60)} min ${Math.round(s % 60)} s`;
   }
 
+  function fmtDate(ts) {
+    const d = new Date(ts * 1000);
+    const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 864e5);
+    const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (days === 0) return time;
+    if (days === 1) return `Yesterday ${time}`;
+    return d.toLocaleDateString([], { day: "numeric", month: "short", year: days > 300 ? "numeric" : undefined });
+  }
+
+  function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+  function dayGroup(ts) {
+    const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(ts * 1000))) / 864e5);
+    if (days <= 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return "Previous 7 days";
+    if (days < 30) return "Previous 30 days";
+    return "Older";
+  }
+
   function extOf(name) {
     const i = name.lastIndexOf(".");
     return i >= 0 ? name.slice(i).toLowerCase() : "";
@@ -87,6 +134,314 @@
       throw err;
     }
     return res.status === 204 ? null : res.json();
+  }
+
+  // ---------------------------------------------------------------- local archive (IndexedDB)
+
+  // Output files are kept in the browser so history outlives the server's TTL.
+  // Metadata and blobs live in separate stores so listing never loads the files.
+  const db = (() => {
+    let opening;
+    const open = () => opening ??= new Promise((resolve, reject) => {
+      const req = indexedDB.open("ocrdesk", 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore("conversions", { keyPath: "id" });
+        req.result.createObjectStore("files");
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    async function run(stores, mode, fn) {
+      const conn = await open();
+      return new Promise((resolve, reject) => {
+        const tx = conn.transaction(stores, mode);
+        const req = fn(...[stores].flat().map((n) => tx.objectStore(n)));
+        tx.oncomplete = () => resolve(req?.result);
+        tx.onerror = tx.onabort = () => reject(tx.error);
+      });
+    }
+    return {
+      list: () => run("conversions", "readonly", (s) => s.getAll()),
+      has: async (id) => (await run("conversions", "readonly", (s) => s.count(id))) > 0,
+      files: (id) => run("files", "readonly", (s) => s.get(id)),
+      save: (meta, files) => run(["conversions", "files"], "readwrite", (m, f) => { f.put(files, meta.id); m.put(meta); }),
+      remove: (id) => run(["conversions", "files"], "readwrite", (m, f) => { m.delete(id); f.delete(id); }),
+      clear: () => run(["conversions", "files"], "readwrite", (m, f) => { m.clear(); f.clear(); }),
+    };
+  })();
+
+  const archiving = new Set();
+
+  async function archiveJob(job) {
+    const id = job.id;
+    if (archiving.has(id) || history.some((h) => h.id === id)) return true;
+    archiving.add(id);
+    try {
+      const base = `${API}/jobs/${id}`;
+      const [pdf, txt] = await Promise.all(["pdf", "txt"].map(async (kind) => {
+        const res = await fetch(`${base}/${kind}`);
+        if (!res.ok) throw new Error(`${kind} ${res.status}`);
+        return res.blob();
+      }));
+      const d = job.data;
+      const meta = {
+        id,
+        name: d.result.output_name,
+        files: d.files,
+        options: d.options,
+        result: d.result,
+        created: d.created,
+        finished: d.finished || Date.now() / 1000,
+        size: pdf.size + txt.size,
+      };
+      await db.save(meta, { pdf, txt });
+      await loadHistory();
+      return true;
+    } catch (err) {
+      console.warn("Could not save conversion locally", err);
+      if (err?.name === "QuotaExceededError") alertInline("Browser storage is full — delete some items from History to keep new results.");
+      return false;
+    } finally {
+      archiving.delete(id);
+    }
+  }
+
+  // ---------------------------------------------------------------- history sidebar
+
+  async function loadHistory() {
+    try {
+      history = (await db.list()).sort((a, b) => b.finished - a.finished);
+    } catch {
+      history = [];
+      el.historyEmpty.textContent = "History is unavailable: this browser blocks local storage.";
+    }
+    renderHistory();
+    updateStorageNote();
+  }
+
+  function renderHistory() {
+    const q = el.historySearch.value.trim().toLowerCase();
+    const items = q ? history.filter((h) => h.name.toLowerCase().includes(q) || h.files.some((f) => f.name.toLowerCase().includes(q))) : history;
+    const nodes = [];
+    let group = null;
+    let list = null;
+    for (const h of items) {
+      const g = dayGroup(h.finished);
+      if (g !== group) {
+        group = g;
+        const head = document.createElement("h3");
+        head.textContent = g;
+        list = document.createElement("ul");
+        nodes.push(head, list);
+      }
+      list.append(historyItem(h));
+    }
+    el.history.replaceChildren(el.historyEmpty, ...nodes);
+    el.historyEmpty.hidden = items.length > 0;
+    if (q && !items.length) el.historyEmpty.textContent = "No matches.";
+    else if (!history.length) el.historyEmpty.textContent = "Finished conversions are saved in this browser and show up here.";
+    el.historyCount.textContent = history.length ? String(history.length) : "";
+    el.clearHistory.hidden = history.length === 0;
+  }
+
+  function historyItem(h) {
+    const node = el.historyTemplate.content.firstElementChild.cloneNode(true);
+    node.dataset.id = h.id;
+    node.classList.toggle("active", current?.id === h.id);
+    const names = h.files.map((f) => f.name);
+    node.querySelector(".h-icon").textContent = names.length > 1 ? `×${names.length}` : (extOf(names[0]).slice(1, 5).toUpperCase() || "PDF");
+    node.querySelector(".h-name").textContent = h.name;
+    node.querySelector(".h-name").title = names.join("\n");
+    const r = h.result;
+    node.querySelector(".h-meta").textContent = `${fmtDate(h.finished)} · ${r.pages} page${r.pages === 1 ? "" : "s"}`;
+    node.querySelector(".h-open").addEventListener("click", () => {
+      openPreview(h.id);
+      if (isDrawer()) setSidebar(false);
+    });
+    const rm = node.querySelector(".h-remove");
+    rm.setAttribute("aria-label", `Delete ${h.name}`);
+    rm.title = "Delete";
+    rm.addEventListener("click", async () => {
+      if (current?.id === h.id) closePreview();
+      await db.remove(h.id).catch(() => {});
+      loadHistory();
+    });
+    return node;
+  }
+
+  function updateStorageNote() {
+    const used = history.reduce((n, h) => n + (h.size || 0), 0);
+    el.storageNote.textContent = history.length ? `${fmtBytes(used)} stored in this browser` : "";
+  }
+
+  let clearArmed;
+  function clearHistoryClicked() {
+    // Two-step confirm without a blocking dialog.
+    if (!clearArmed) {
+      el.clearHistory.textContent = "Confirm";
+      el.clearHistory.classList.add("danger");
+      clearArmed = setTimeout(disarmClear, 3000);
+      return;
+    }
+    disarmClear();
+    if (current && history.some((h) => h.id === current.id)) closePreview();
+    db.clear().catch(() => {}).then(loadHistory);
+  }
+  function disarmClear() {
+    clearTimeout(clearArmed);
+    clearArmed = null;
+    el.clearHistory.textContent = "Clear all";
+    el.clearHistory.classList.remove("danger");
+  }
+
+  const drawerQuery = matchMedia("(max-width: 1099px)");
+  const isDrawer = () => drawerQuery.matches;
+
+  function setSidebar(open, persist = !isDrawer()) {
+    el.shell.classList.toggle("sidebar-open", open);
+    el.toggleSidebar.setAttribute("aria-expanded", String(open));
+    el.toggleSidebar.setAttribute("aria-label", open ? "Hide history" : "Show history");
+    el.scrim.hidden = !(open && isDrawer());
+    el.sidebar.inert = !open;
+    if (persist) storage.set(STORE_SIDEBAR, open);
+  }
+
+  // ---------------------------------------------------------------- preview
+
+  async function openPreview(id, page) {
+    let src = null;
+    const meta = history.find((h) => h.id === id);
+    if (meta) {
+      const files = await db.files(id).catch(() => null);
+      if (files?.pdf) {
+        const pdfUrl = URL.createObjectURL(files.pdf);
+        const txtUrl = URL.createObjectURL(files.txt);
+        src = {
+          id, name: meta.name, result: meta.result, finished: meta.finished, pdfUrl, txtUrl,
+          loadText: () => files.txt.text(),
+          revoke: () => { URL.revokeObjectURL(pdfUrl); URL.revokeObjectURL(txtUrl); },
+        };
+      }
+    }
+    if (!src) {
+      // Not archived (yet): fall back to the server copy.
+      const job = jobs.get(id);
+      if (!job || job.data.status !== "done") return;
+      const base = `${API}/jobs/${id}`;
+      src = {
+        id, name: job.data.result.output_name, result: job.data.result, finished: job.data.finished,
+        pdfUrl: `${base}/pdf?inline=true`, txtUrl: `${base}/txt`,
+        loadText: async () => { const r = await fetch(`${base}/txt?inline=true`); if (!r.ok) throw new Error(); return r.text(); },
+        revoke: () => {},
+      };
+    }
+    showPreview(src, page);
+  }
+
+  function showPreview(src, page) {
+    const same = current?.id === src.id;
+    current?.revoke();
+    current = src;
+    const r = src.result;
+    el.previewName.textContent = src.name;
+    el.previewName.title = src.name;
+    el.previewMeta.textContent = [
+      src.finished && fmtDate(src.finished),
+      `${r.pages} page${r.pages === 1 ? "" : "s"}`,
+      fmtBytes(r.size_bytes),
+    ].filter(Boolean).join(" · ");
+
+    const options = r.sections.map((s) => {
+      const o = document.createElement("option");
+      o.value = s.page;
+      o.textContent = `${"\u2003".repeat(s.level - 1)}${s.title} — p. ${s.page}`;
+      return o;
+    });
+    const placeholder = new Option(`Jump to section (${r.section_count})`, "");
+    el.previewSections.replaceChildren(placeholder, ...options);
+    el.previewSections.hidden = !r.sections.length;
+
+    setPreviewTab("pdf");
+    el.textBody.textContent = "";
+    el.textBody.dataset.loaded = "";
+    showPdfPage(page);
+
+    if (el.preview.hidden) {
+      el.preview.hidden = false;
+      el.shell.classList.add("preview-open");
+      if (!reducedMotion.matches && !same) {
+        el.preview.animate(
+          [{ opacity: 0, transform: "translateX(1.5rem)" }, { opacity: 1, transform: "none" }],
+          { duration: 360, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+        );
+      }
+    }
+    document.body.classList.toggle("sheet-open", isSheet());
+    markActive();
+  }
+
+  function showPdfPage(page) {
+    if (!current) return;
+    // The fragment is understood by the built-in PDF viewers (Chrome, Firefox, Safari).
+    const frag = page ? `#page=${page}` : "";
+    el.previewFrame.src = `${current.pdfUrl}${frag}`;
+    el.previewOpen.href = `${current.pdfUrl}${frag}`;
+    el.previewDl.href = current.pdfUrl;
+    el.previewDl.download = current.name;
+  }
+
+  async function setPreviewTab(tab) {
+    el.previewTab.querySelector(`input[value="${tab}"]`).checked = true;
+    const text = tab === "text";
+    el.previewFrame.hidden = text;
+    el.previewText.hidden = !text;
+    el.previewSections.disabled = text;
+    if (!current) return;
+    el.previewDl.href = text ? current.txtUrl : current.pdfUrl;
+    el.previewDl.download = text ? current.result.text_name : current.name;
+    if (text && !el.textBody.dataset.loaded) {
+      const src = current;
+      el.textNote.textContent = "Loading…";
+      try {
+        const body = await src.loadText();
+        if (current !== src) return;
+        el.textBody.textContent = body.trim() ? body : "";
+        el.textBody.dataset.loaded = "1";
+        el.textNote.textContent = body.trim()
+          ? `${src.result.text_chars.toLocaleString()} characters`
+          : "No text was recognized in this document.";
+      } catch {
+        if (current === src) el.textNote.textContent = "Could not load the text.";
+      }
+    }
+  }
+
+  function closePreview() {
+    if (!current) return;
+    const src = current;
+    current = null;
+    const finish = () => {
+      el.preview.hidden = true;
+      el.shell.classList.remove("preview-open");
+      document.body.classList.remove("sheet-open");
+      el.previewFrame.removeAttribute("src");
+      src.revoke();
+    };
+    if (reducedMotion.matches) finish();
+    else {
+      el.preview.animate(
+        [{ opacity: 1, transform: "none" }, { opacity: 0, transform: isSheet() ? "translateY(2rem)" : "translateX(1.5rem)" }],
+        { duration: 220, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+      ).finished.catch(() => {}).then(() => { if (!current) finish(); });
+    }
+    markActive();
+  }
+
+  const sheetQuery = matchMedia("(max-width: 899px)");
+  const isSheet = () => sheetQuery.matches;
+
+  function markActive() {
+    for (const node of el.history.querySelectorAll(".h-item")) node.classList.toggle("active", node.dataset.id === current?.id);
   }
 
   // ---------------------------------------------------------------- options
@@ -281,7 +636,7 @@
       done: node.querySelector(".job-done"),
       meta: node.querySelector(".job-meta"),
       dlPdf: node.querySelector(".dl-pdf"),
-      openPdf: node.querySelector(".open-pdf"),
+      showPreview: node.querySelector(".show-preview"),
       dlTxt: node.querySelector(".dl-txt"),
       toggleSections: node.querySelector(".toggle-sections"),
       outline: node.querySelector(".outline"),
@@ -294,6 +649,7 @@
     refs.name.title = names.join("\n");
     refs.icon.textContent = names.length > 1 ? `×${names.length}` : (extOf(names[0]).slice(1, 5).toUpperCase() || "FILE");
     refs.remove.addEventListener("click", () => removeJob(job));
+    refs.showPreview.addEventListener("click", () => openPreview(job.id));
     refs.toggleSections.addEventListener("click", () => {
       const open = refs.outline.hidden;
       if (open && !job.outlineRendered) renderOutline(job);
@@ -308,7 +664,13 @@
   }
 
   function updateJob(job, data) {
+    const wasDone = job.data.status === "done";
     const d = Object.assign(job.data, data);
+    if (d.status === "done" && !wasDone && !job.id.startsWith("tmp-")) {
+      // Jobs finishing while the page is open get previewed; restored ones are only archived.
+      const live = !job.restored;
+      archiveJob(job).then(() => { if (live && jobs.has(job.id)) openPreview(job.id); });
+    }
     const { refs, node } = job;
     node.dataset.status = d.status;
     refs.pill.textContent = STATUS_LABEL[d.status] || d.status;
@@ -338,7 +700,6 @@
       refs.meta.textContent = parts.join(" · ");
       const base = `${API}/jobs/${job.id}`;
       refs.dlPdf.href = `${base}/pdf`;
-      refs.openPdf.href = `${base}/pdf?inline=true`;
       refs.dlTxt.href = `${base}/txt`;
       refs.toggleSections.hidden = !r.section_count;
       refs.done.hidden = false;
@@ -357,8 +718,12 @@
       li.className = `l${s.level}`;
       const a = document.createElement("a");
       a.href = `${href}#page=${s.page}`;
-      a.target = "_blank";
-      a.rel = "noopener";
+      a.addEventListener("click", (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        if (current?.id === job.id) { setPreviewTab("pdf"); showPdfPage(s.page); }
+        else openPreview(job.id, s.page);
+      });
       a.style.paddingLeft = `${8 + (s.level - 1) * 16}px`;
       const t = document.createElement("span");
       t.className = "t";
@@ -431,7 +796,9 @@
     // Stored newest-last; prepend oldest first so the newest ends up on top.
     results.forEach((data, i) => {
       if (!data) return;
-      createJobCard(ids[i], data);
+      const job = createJobCard(ids[i], { status: "queued", files: data.files });
+      job.restored = data.status === "done";
+      updateJob(job, data);
     });
     persistJobs();
     schedulePoll(0);
@@ -484,6 +851,33 @@
         if (job.data.status === "done" || job.data.status === "error") removeJob(job);
       }
     });
+    el.toggleSidebar.addEventListener("click", () => setSidebar(!el.shell.classList.contains("sidebar-open")));
+    el.scrim.addEventListener("click", () => setSidebar(false));
+    el.historySearch.addEventListener("input", renderHistory);
+    el.clearHistory.addEventListener("click", clearHistoryClicked);
+    drawerQuery.addEventListener("change", () => setSidebar(isDrawer() ? false : storage.get(STORE_SIDEBAR, true), false));
+    sheetQuery.addEventListener("change", () => document.body.classList.toggle("sheet-open", Boolean(current) && isSheet()));
+
+    el.previewClose.addEventListener("click", closePreview);
+    el.previewTab.addEventListener("change", (e) => setPreviewTab(e.target.value));
+    el.previewSections.addEventListener("change", () => {
+      const page = Number(el.previewSections.value);
+      if (page) showPdfPage(page);
+      el.previewSections.value = "";
+    });
+    el.textCopy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(el.textBody.textContent);
+        el.textCopy.textContent = "Copied";
+        setTimeout(() => { el.textCopy.textContent = "Copy"; }, 1500);
+      } catch { /* clipboard blocked */ }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (isDrawer() && el.shell.classList.contains("sidebar-open")) setSidebar(false);
+      else if (current && !e.target.closest?.("input, select, textarea")) closePreview();
+    });
+
     const syncTopbar = () => el.topbar.classList.toggle("scrolled", window.scrollY > 4);
     window.addEventListener("scroll", syncTopbar, { passive: true });
     syncTopbar();
@@ -492,12 +886,16 @@
 
   async function init() {
     wire();
+    setSidebar(isDrawer() ? false : storage.get(STORE_SIDEBAR, true), false);
+    // Ask the browser not to evict saved results under storage pressure (best effort).
+    navigator.storage?.persist?.().catch(() => {});
+    await loadHistory();
     try {
       config = { ...config, ...(await api("config")) };
     } catch {
       alertInline("Could not reach the server. Check that the backend is running.");
     }
-    el.ttlNote.textContent = `Files are deleted automatically after ${Math.round(config.job_ttl_minutes / 60 * 10) / 10} h`;
+    el.ttlNote.textContent = `Server copies are deleted after ${Math.round(config.job_ttl_minutes / 60 * 10) / 10} h · results stay in this browser`;
     el.acceptedNote.textContent = `PDF, JPG, PNG, TIFF, HEIC, TXT, MD… up to ${config.max_file_mb} MB each`;
     el.input.accept = config.accepted_extensions.join(",");
     applyOptions(storage.get(STORE_OPTS, {}));

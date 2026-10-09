@@ -11,7 +11,10 @@
 </head>
 <body>
   <header class="topbar" id="topbar">
-    <div class="wrap topbar-inner">
+    <div class="topbar-inner">
+      <button type="button" class="icon-btn bar-btn" id="toggle-sidebar" aria-controls="sidebar" aria-expanded="true" aria-label="Show history" title="History">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
       <a class="brand" href="./">
         <img src="favicon.svg" alt="" width="24" height="24">
         <span>OCR Desk</span>
@@ -20,7 +23,27 @@
     </div>
   </header>
 
-  <main class="wrap">
+  <div class="shell" id="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Previous conversions">
+    <div class="sidebar-head">
+      <h2>History</h2>
+      <span class="muted small" id="history-count"></span>
+    </div>
+    <div class="sidebar-search">
+      <input type="search" id="history-search" class="text-input" placeholder="Search" aria-label="Search history">
+    </div>
+    <div class="history" id="history">
+      <p class="history-empty muted small" id="history-empty">Finished conversions are saved in this browser and show up here.</p>
+    </div>
+    <div class="sidebar-foot">
+      <span class="muted small" id="storage-note"></span>
+      <button type="button" class="btn ghost small" id="clear-history" hidden>Clear all</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+  <div class="wrap">
     <section class="hero">
       <h1>Make any document searchable.</h1>
       <p class="lede">Turn scans, photos and text files into PDFs you can search, copy from, and jump through by section.</p>
@@ -94,7 +117,42 @@
       </div>
       <ol id="job-list" class="job-list"></ol>
     </section>
+  </div>
   </main>
+
+  <aside class="preview" id="preview" aria-label="Preview" hidden>
+    <div class="preview-head">
+      <div class="preview-title">
+        <div class="preview-name" id="preview-name"></div>
+        <div class="muted small" id="preview-meta"></div>
+      </div>
+      <button type="button" class="icon-btn" id="preview-close" aria-label="Close preview" title="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="preview-tools">
+      <div class="segmented" id="preview-tab">
+        <label><input type="radio" name="preview-tab" value="pdf" checked><span>PDF</span></label>
+        <label><input type="radio" name="preview-tab" value="text"><span>Text</span></label>
+      </div>
+      <select id="preview-sections" class="text-input select" aria-label="Jump to section" hidden></select>
+      <div class="preview-actions">
+        <a class="btn small" id="preview-open" target="_blank" rel="noopener" title="Open in a new tab">Open</a>
+        <a class="btn primary small" id="preview-dl" download>Download</a>
+      </div>
+    </div>
+    <div class="preview-body">
+      <iframe id="preview-frame" title="PDF preview"></iframe>
+      <div class="preview-text" id="preview-text" hidden>
+        <div class="text-tools">
+          <span class="muted small" id="text-note"></span>
+          <button type="button" class="btn ghost small" id="text-copy">Copy</button>
+        </div>
+        <pre id="text-body" tabindex="0"></pre>
+      </div>
+    </div>
+  </aside>
+  </div>
 
   <template id="job-template">
     <li class="job">
@@ -113,14 +171,29 @@
       <div class="job-done" hidden>
         <div class="job-meta muted small"></div>
         <div class="job-actions">
-          <a class="btn primary small dl-pdf" download>Download PDF</a>
-          <a class="btn small open-pdf" target="_blank" rel="noopener">Open</a>
+          <button type="button" class="btn primary small show-preview">Preview</button>
+          <a class="btn small dl-pdf" download>Download PDF</a>
           <a class="btn small dl-txt" download>Text</a>
           <button type="button" class="btn ghost small toggle-sections" aria-expanded="false">Sections</button>
         </div>
         <ol class="outline" hidden></ol>
       </div>
       <div class="job-error" hidden></div>
+    </li>
+  </template>
+
+  <template id="history-template">
+    <li class="h-item">
+      <button type="button" class="h-open">
+        <span class="h-icon" aria-hidden="true"></span>
+        <span class="h-text">
+          <span class="h-name"></span>
+          <span class="h-meta muted small"></span>
+        </span>
+      </button>
+      <button type="button" class="icon-btn h-remove" aria-label="Delete">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </li>
   </template>
 </body>

@@ -24,7 +24,8 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
-        add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; frame-ancestors 'none'" always;
+        # blob: frames let the preview show PDFs kept in the browser's IndexedDB.
+        add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; frame-src 'self' blob:; object-src 'self' blob:; frame-ancestors 'none'" always;
         add_header X-Frame-Options DENY always;
         add_header X-Content-Type-Options nosniff always;
         add_header Referrer-Policy same-origin always;
