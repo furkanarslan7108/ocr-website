@@ -24,8 +24,8 @@
     force: "Rasterize and OCR every page. Slowest; use for broken text layers.",
   };
   const ENGINE_HINTS = {
-    tesseract: "Fast and dependable on clean scans and digital documents.",
-    paddle: "Deep-learning OCR; often better on photos and poor scans. Slower, fewer languages.",
+    tesseract: "Best for clean scans and Turkish text. Fastest.",
+    paddle: "Best for phone photos and poor scans. Slower; weaker on Turkish capitals (İ, Ş, Ğ).",
   };
   const STATUS_LABEL = { uploading: "Uploading", queued: "Queued", processing: "Processing", done: "Done", error: "Failed" };
   // Natural direction for each sort key the first time it is picked.
