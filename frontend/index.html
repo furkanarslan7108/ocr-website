@@ -47,6 +47,17 @@
 
           <div class="options">
             <fieldset class="opt opt-wide">
+              <legend>OCR engine</legend>
+              <div class="group group-pad">
+                <div class="segmented" id="engine">
+                  <label><input type="radio" name="engine" value="tesseract" checked><span>Tesseract</span></label>
+                  <label><input type="radio" name="engine" value="paddle"><span>PaddleOCR</span></label>
+                </div>
+                <p class="hint muted" id="engine-hint"></p>
+              </div>
+            </fieldset>
+
+            <fieldset class="opt opt-wide">
               <legend>Languages</legend>
               <div class="group group-pad">
                 <div id="languages" class="chips"></div>

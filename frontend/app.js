@@ -23,6 +23,10 @@
     redo: "Replace an earlier OCR layer while keeping real digital text.",
     force: "Rasterize and OCR every page. Slowest; use for broken text layers.",
   };
+  const ENGINE_HINTS = {
+    tesseract: "Fast and dependable on clean scans and digital documents.",
+    paddle: "Deep-learning OCR; often better on photos and poor scans. Slower, fewer languages.",
+  };
   const STATUS_LABEL = { uploading: "Uploading", queued: "Queued", processing: "Processing", done: "Done", error: "Failed" };
   // Natural direction for each sort key the first time it is picked.
   const SORT_DEFAULT_DIR = { date: -1, name: 1, pages: -1, size: -1 };
@@ -43,6 +47,7 @@
     stagedList: $("#staged-list"),
     languages: $("#languages"),
     modeHint: $("#mode-hint"),
+    engineHint: $("#engine-hint"),
     rotate: $("#opt-rotate"),
     deskew: $("#opt-deskew"),
     clean: $("#opt-clean"),
@@ -96,7 +101,9 @@
     textCopy: $("#text-copy"),
   };
 
-  let config = { languages: ["eng"], default_language: "eng", accepted_extensions: [], max_file_mb: 100, max_files_per_job: 20 };
+  let config = {
+    languages: ["eng"], default_language: "eng", paddle_languages: [], accepted_extensions: [], max_file_mb: 100, max_files_per_job: 20,
+  };
   let staged = [];
   const shownStaged = new WeakSet(); // files whose chip has already animated in
   const jobs = new Map(); // id -> { data, node, refs }
@@ -917,6 +924,7 @@
     return {
       languages: languages.length ? languages : [config.default_language],
       mode: document.querySelector('input[name="mode"]:checked').value,
+      engine: document.querySelector('input[name="engine"]:checked').value,
       rotate: el.rotate.checked,
       deskew: el.deskew.checked,
       clean: el.clean.checked,
@@ -929,6 +937,8 @@
       ? o.languages : [config.default_language]);
     const mode = document.querySelector(`input[name="mode"][value="${o.mode}"]`);
     if (mode) mode.checked = true;
+    const engine = document.querySelector(`input[name="engine"][value="${o.engine}"]`);
+    if (engine) engine.checked = true;
     if (typeof o.rotate === "boolean") el.rotate.checked = o.rotate;
     if (typeof o.deskew === "boolean") el.deskew.checked = o.deskew;
     if (typeof o.clean === "boolean") el.clean.checked = o.clean;
@@ -937,7 +947,14 @@
   }
 
   function syncOptionUI() {
+    const paddle = document.querySelector('input[name="engine"]:checked').value === "paddle";
+    for (const input of el.languages.querySelectorAll("input")) {
+      input.disabled = paddle && !config.paddle_languages.includes(input.value);
+      if (input.disabled) input.checked = false;
+      input.nextElementSibling.title = input.disabled ? "Not supported by PaddleOCR" : input.value;
+    }
     const o = readOptions();
+    el.engineHint.textContent = ENGINE_HINTS[o.engine];
     el.modeHint.textContent = MODE_HINTS[o.mode];
     el.deskew.disabled = o.mode === "redo";
     el.deskew.parentElement.title = o.mode === "redo" ? "Not available in Redo mode" : "";
@@ -1031,6 +1048,7 @@
     for (const f of files) form.append("files", f, f.name);
     form.append("languages", o.languages.join("+"));
     form.append("mode", o.mode);
+    form.append("engine", o.engine);
     form.append("rotate", o.rotate);
     form.append("deskew", o.deskew && o.mode !== "redo");
     form.append("clean", o.clean);

@@ -552,6 +552,7 @@ body.viewer-open { overflow: hidden; }
 }
 .chip span:active { transform: scale(0.95); transition-duration: var(--dur-fast); }
 .chip input:checked + span { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.chip input:disabled + span { opacity: 0.4; cursor: default; transform: none; }
 .chip input:focus-visible + span, .segmented input:focus-visible + span { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
 
 /* Segmented control with a sliding thumb. */
@@ -567,6 +568,8 @@ body.viewer-open { overflow: hidden; }
 }
 .segmented:has(input[value="redo"]:checked) { --index: 1; }
 .segmented:has(input[value="force"]:checked) { --index: 2; }
+#engine { --count: 2; }
+#engine:has(input[value="paddle"]:checked) { --index: 1; }
 .segmented::before {
   content: "";
   position: absolute;

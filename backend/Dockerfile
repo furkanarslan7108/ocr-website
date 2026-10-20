@@ -20,6 +20,12 @@ WORKDIR /srv
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+# PaddleOCR models are fetched now: at runtime the backend has no internet access.
+ARG PADDLE_MODEL=small
+ENV PADDLE_MODEL=$PADDLE_MODEL PADDLE_MODEL_DIR=/opt/paddle-models
+COPY app/paddle_ocr.py /tmp/paddle_ocr.py
+RUN python /tmp/paddle_ocr.py && rm /tmp/paddle_ocr.py
+
 COPY app ./app
 
 RUN useradd --create-home --uid 1000 app \

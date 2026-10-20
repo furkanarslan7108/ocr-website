@@ -3,7 +3,7 @@
 Turn scans, photos and documents into **searchable, bookmarked PDFs**.
 
 Drop in PDFs, plain-text/Markdown files or images (JPG, PNG, TIFF incl. multi-page, HEIC, WebP, BMP, GIF).
-Each file is converted to PDF, OCR'd with Tesseract, and given a navigable outline (bookmarks):
+Each file is converted to PDF, OCR'd with Tesseract or PaddleOCR (your pick per job), and given a navigable outline (bookmarks):
 
 - Existing structure is kept: a PDF's own bookmarks carry straight through.
 - Otherwise headings are **detected** from the text layer: larger-than-body lines and numbered
@@ -28,7 +28,7 @@ Open <http://localhost:8080>. The first build takes a few minutes.
 browser ──► nginx :80 ──► static frontend (vanilla JS, no build step)
               │
               ├─ /api/* ──► FastAPI backend (internal network, no internet access)
-              │               └─ job queue ─► img2pdf / text layout ─► OCRmyPDF (Tesseract) ─► PyMuPDF (outline, text)
+              │               └─ job queue ─► img2pdf / text layout ─► OCRmyPDF (Tesseract | PaddleOCR) ─► PyMuPDF (outline, text)
               │
               └─ /protected/* (internal) ◄── X-Accel-Redirect: nginx streams result files from the shared volume
 ```
@@ -36,6 +36,7 @@ browser ──► nginx :80 ──► static frontend (vanilla JS, no build step
 | Piece | Choice | Why |
 |---|---|---|
 | OCR | OCRmyPDF 17 + Tesseract 5 | Industry-standard searchable PDFs; parallel per page; deskew/rotation/cleaning |
+| Alt. OCR engine | PaddleOCR PP-OCRv6 via RapidOCR (ONNX Runtime) | Often better on photos and low-quality scans; an OCRmyPDF plugin (`paddle_ocr.py`), so rotation, deskew and optimisation still apply. ONNX Runtime instead of PaddlePaddle: same models, ~10x smaller install, no AVX requirement |
 | Text → PDF | PyMuPDF Story | TXT/MD laid out on A4; Markdown `#` headings become bookmarks |
 | Images → PDF | img2pdf + Pillow | Lossless; original JPEG bytes are embedded without re-encoding |
 | Sectioning | PyMuPDF | Fast text/font-size extraction and outline writing |
@@ -59,6 +60,7 @@ All settings are environment variables. See [`.env.example`](.env.example).
 | `HTTP_PORT` | `8080` | Published port |
 | `OCR_LANGS` | `eng tur deu fra spa ita por nld` | Tesseract packs baked into the image (build arg) |
 | `DEFAULT_LANGUAGE` | `eng` | Used when none is selected |
+| `PADDLE_MODEL` | `small` | PaddleOCR model size baked into the image (build arg): `small` or `medium` (slightly more accurate, ~8x slower on CPU) |
 | `MAX_CONCURRENT_JOBS` | `2` | Jobs processed at once; the rest queue |
 | `OCR_JOBS` | all cores | CPU workers per job |
 | `OCR_OPTIMIZE` | `1` | `0` = fastest, `1` = lossless, `2`/`3` = smaller, slower |
@@ -70,7 +72,7 @@ All settings are environment variables. See [`.env.example`](.env.example).
 | Method | Path | |
 |---|---|---|
 | `GET` | `/api/config` | Languages, limits, accepted types |
-| `POST` | `/api/jobs` | multipart: `files` (1..n; several = combined), `languages` (`eng+tur`), `mode` (`auto`/`redo`/`force`), `rotate`, `deskew`, `clean`, `title` |
+| `POST` | `/api/jobs` | multipart: `files` (1..n; several = combined), `languages` (`eng+tur`), `mode` (`auto`/`redo`/`force`), `engine` (`tesseract`/`paddle`), `rotate`, `deskew`, `clean`, `title` |
 | `GET` | `/api/jobs/{id}` | Status, progress, and result (pages, sections, …) |
 | `GET` | `/api/jobs/{id}/pdf` · `/txt` | Download (`?inline=true` to view in the browser) |
 | `DELETE` | `/api/jobs/{id}` | Cancel (kills running OCR) and delete |

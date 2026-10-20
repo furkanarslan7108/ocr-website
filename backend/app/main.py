@@ -72,6 +72,8 @@ async def get_config():
         "languages": app.state.languages,
         "default_language": config.DEFAULT_LANGUAGE,
         "modes": list(pipeline.MODES),
+        "engines": list(pipeline.ENGINES),
+        "paddle_languages": [lang for lang in app.state.languages if lang in pipeline.PADDLE_LANGS],
         "accepted_extensions": sorted(pipeline.ACCEPTED_EXT),
         "max_file_mb": config.MAX_FILE_MB,
         "max_files_per_job": config.MAX_FILES_PER_JOB,
@@ -84,6 +86,7 @@ async def create_job(
     files: Annotated[list[UploadFile], File()],
     languages: Annotated[str, Form()] = "",
     mode: Annotated[str, Form()] = "auto",
+    engine: Annotated[str, Form()] = "tesseract",
     rotate: Annotated[bool, Form()] = True,
     deskew: Annotated[bool, Form()] = False,
     clean: Annotated[bool, Form()] = False,
@@ -95,10 +98,14 @@ async def create_job(
         raise HTTPException(400, f"At most {config.MAX_FILES_PER_JOB} files per job.")
     if mode not in pipeline.MODES:
         raise HTTPException(400, f"Unknown mode '{mode}'.")
+    if engine not in pipeline.ENGINES:
+        raise HTTPException(400, f"Unknown OCR engine '{engine}'.")
     langs = [lang for lang in re.split(r"[+,\s]+", languages) if lang] or [config.DEFAULT_LANGUAGE]
     unknown = [lang for lang in langs if lang not in app.state.languages]
     if unknown:
         raise HTTPException(400, f"Unsupported language(s): {', '.join(unknown)}.")
+    if engine == "paddle" and (unknown := [lang for lang in langs if lang not in pipeline.PADDLE_LANGS]):
+        raise HTTPException(400, f"PaddleOCR does not support: {', '.join(unknown)}.")
 
     names = [_safe_name(f.filename) for f in files]
     bad = [n for n in names if pipeline.classify(n) is None]
@@ -123,6 +130,7 @@ async def create_job(
     options = {
         "languages": langs,
         "mode": mode,
+        "engine": engine,
         "rotate": rotate,
         "deskew": deskew,
         "clean": clean,

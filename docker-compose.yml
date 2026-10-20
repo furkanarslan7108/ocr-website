@@ -4,6 +4,7 @@ services:
       context: ./backend
       args:
         OCR_LANGS: ${OCR_LANGS:-eng tur deu fra spa ita por nld}
+        PADDLE_MODEL: ${PADDLE_MODEL:-small}
     restart: unless-stopped
     # tini as PID 1 reaps OCR worker processes orphaned when a job is cancelled.
     init: true

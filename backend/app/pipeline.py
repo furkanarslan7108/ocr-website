@@ -38,7 +38,17 @@ MODES = {
     "force": "--force-ocr",  # rasterize and OCR every page
 }
 
+ENGINES = ("tesseract", "paddle")
+# Tesseract language codes covered by PaddleOCR's multilingual PP-OCRv6 model (Latin scripts, Chinese, Japanese).
+PADDLE_LANGS = {
+    "afr", "aze", "bos", "cat", "ces", "chi_sim", "chi_tra", "cym", "dan", "deu", "eng", "est", "eus", "fin",
+    "fra", "gle", "glg", "hrv", "hun", "ind", "isl", "ita", "jpn", "kmr", "lat", "lav", "lit", "ltz", "mri",
+    "msa", "mlt", "nld", "nor", "oci", "pol", "por", "que", "ron", "slk", "slv", "spa", "sqi", "srp_latn",
+    "swa", "swe", "tgl", "tur", "uzb", "vie",
+}
+
 PLUGIN_PATH = Path(__file__).with_name("ocr_progress.py")
+PADDLE_PLUGIN_PATH = Path(__file__).with_name("paddle_ocr.py")
 
 ProgressFn = Callable[[float, str], None]
 
@@ -261,13 +271,16 @@ _OCR_EXIT_MESSAGES = {
 }
 
 
-async def ocr_pdf(src: Path, dst: Path, options: dict, work: Path, on_progress: Callable[[str, int, int], None]) -> None:
+async def ocr_pdf(
+    src: Path, dst: Path, pages: int, options: dict, work: Path, on_progress: Callable[[str, int, int], None]
+) -> None:
     mode = options["mode"]
     args = [
         "ocrmypdf",
         "--plugin", str(PLUGIN_PATH),
         "--language", "+".join(options["languages"]),
-        "--jobs", str(config.OCR_JOBS),
+        # No more workers than pages, so the PaddleOCR engine can give each one more threads.
+        "--jobs", str(max(1, min(config.OCR_JOBS, pages))),
         "--output-type", "pdf",
         "--optimize", str(config.OCR_OPTIMIZE),
         # Linearizing is wasted work: the PDF is rewritten when bookmarks are added.
@@ -280,6 +293,8 @@ async def ocr_pdf(src: Path, dst: Path, options: dict, work: Path, on_progress: 
         args.append("--deskew")
     if options["clean"]:
         args.append("--clean")
+    if options.get("engine") == "paddle":
+        args += ["--plugin", str(PADDLE_PLUGIN_PATH), "--pdf-renderer", "fpdf2"]
     args += [str(src), str(dst)]
 
     def on_line(line: str) -> None:
@@ -333,7 +348,7 @@ async def process(job, report: ProgressFn) -> dict:
 
         report(base + share * 0.10, f"Starting OCR · {label}")
         out = work / f"{i:03d}.ocr.pdf"
-        await ocr_pdf(pdf, out, job.options, work, on_ocr)
+        await ocr_pdf(pdf, out, pages, job.options, work, on_ocr)
         parts.append((item["name"], out))
 
     report(0.95, "Building sections")

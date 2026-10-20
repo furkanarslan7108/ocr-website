@@ -6,3 +6,5 @@ pymupdf==1.28.2
 pillow==12.3.0
 pillow-heif==1.8.0
 img2pdf==0.6.3
+rapidocr==3.10.0
+onnxruntime==1.31.0
