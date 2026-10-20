@@ -8,165 +8,321 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
+  <script src="retro.js" defer></script>
 </head>
 <body>
-  <header class="topbar" id="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="./">
-        <img src="favicon.svg" alt="" width="24" height="24">
-        <span>OCR Desk</span>
+  <div class="desktop">
+    <!-- ============================================================ Left side of the desktop -->
+    <aside class="side side-left" aria-label="Desktop and advertisements">
+      <nav class="desk-icons" aria-label="Desktop">
+        <a class="desk-icon" href="#convert-title" data-retro="top">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="17" fill="#c0c0c0" stroke="#000"/><rect x="7" y="8" width="18" height="11" fill="#000080"/><rect x="10" y="22" width="12" height="3" fill="#808080" stroke="#000"/><rect x="6" y="25" width="20" height="3" fill="#c0c0c0" stroke="#000"/><path d="M9 10h6M9 13h10M9 16h4" stroke="#00ffff"/></svg>
+          <span>My Computer</span>
+        </a>
+        <a class="desk-icon" href="#library-title">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 8h10l2 3h14v16H3z" fill="#ffff80" stroke="#000"/><path d="M3 12h26" stroke="#808000"/></svg>
+          <span>My Documents</span>
+        </a>
+        <button type="button" class="desk-icon" data-retro="virus">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 3h12l6 6v20H8z" fill="#fff" stroke="#000"/><path d="M20 3v6h6" fill="#c0c0c0" stroke="#000"/><rect x="11" y="13" width="12" height="9" fill="#000080"/><path d="M13 15h8M13 17h8M13 19h5" stroke="#fff"/></svg>
+          <span>not-a-virus.exe</span>
+        </button>
+        <button type="button" class="desk-icon" data-retro="bin">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 9h16l-2 19H10z" fill="#c0c0c0" stroke="#000"/><path d="M6 7h20v2H6z" fill="#808080" stroke="#000"/><path d="M12 12l1 13M16 12v13M20 12l-1 13" stroke="#808080"/></svg>
+          <span>Recycle Bin</span>
+        </button>
+      </nav>
+
+      <a class="ad ad-sky ad-ram" href="#" data-retro="ad" data-ad="ram">
+        <span class="ad-tag">ADVERTISEMENT</span>
+        <span class="ram-chip" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <strong class="blink">DOWNLOAD<br>MORE RAM</strong>
+        <span>Is your OCR slow?<br>Your PC needs <u>MORE MEMORY</u>!</span>
+        <span class="ram-meter"><span>32 MB</span><b>&rarr;</b><span class="hot">4 GB</span></span>
+        <span class="ad-btn">FREE DOWNLOAD!!</span>
+        <small>100% legal. No credit card.*</small>
       </a>
-      <span class="muted small" id="ttl-note"></span>
-    </div>
-  </header>
 
-  <main>
-    <!-- ============================================================ Convert -->
-    <section class="view wrap" id="view-convert" aria-labelledby="convert-title">
-      <header class="page-head">
-        <h1 id="convert-title">Convert</h1>
-        <p class="muted">Scans, photos and text files become PDFs you can search, copy from, and jump through by section.</p>
+      <a class="ad ad-sky ad-singles" href="#" data-retro="ad" data-ad="singles">
+        <span class="ad-tag">ADVERTISEMENT</span>
+        <strong>HOT SINGLE PAGES</strong>
+        <span class="rainbow">IN YOUR SCANNER TRAY</span>
+        <span class="singles-pages" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>They want to be <b>searchable</b> tonight.</span>
+        <span class="ad-btn">MEET THEM &gt;&gt;</span>
+      </a>
+
+      <div class="ad ad-construction" role="note">
+        <span class="hazard" aria-hidden="true"></span>
+        <strong>UNDER<br>CONSTRUCTION</strong>
+        <span class="worker" aria-hidden="true">&#x1F6A7;</span>
+        <small>This side of the page is coming soon!</small>
+        <span class="hazard" aria-hidden="true"></span>
+      </div>
+    </aside>
+
+    <!-- ============================================================ Main browser window -->
+    <div class="window main-window">
+      <header class="title-bar topbar" id="topbar">
+        <a class="brand" href="./">
+          <img src="favicon.svg" alt="" width="16" height="16">
+          <span>OCR Desk - Microsoft Internet Explorer</span>
+        </a>
+        <span class="title-controls" aria-hidden="true"><i class="tc-min"></i><i class="tc-max"></i><i class="tc-close"></i></span>
       </header>
+      <div class="menubar" aria-hidden="true">
+        <span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>V</u>iew</span><span>F<u>a</u>vorites</span><span><u>T</u>ools</span><span><u>H</u>elp</span>
+        <span class="ie-logo"></span>
+      </div>
+      <div class="addressbar" aria-hidden="true">
+        <span class="addr-label">A<u>d</u>dress</span>
+        <span class="addr-field"><img src="favicon.svg" alt="" width="14" height="14"> http://www.ocrdesk.com/~convert/index.htm</span>
+        <span class="addr-go">Go</span>
+      </div>
 
-      <section class="card" aria-label="Upload files">
-        <label class="dropzone" id="dropzone" tabindex="0">
-          <input type="file" id="file-input" multiple hidden>
-          <span class="dz-icon" aria-hidden="true">
-            <svg viewBox="0 0 32 32"><path d="M9 4.5h9.5L25 11v15a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 7.5 26V6A1.5 1.5 0 0 1 9 4.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 4.5V11H25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 23v-8m0 0-3.25 3.25M16 15l3.25 3.25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <span class="dz-text">
-            <span class="dz-title">Drop files to convert</span>
-            <span class="dz-sub muted" id="accepted-note">PDF, images and text files</span>
-            <span class="dz-sub muted dz-paste">Or paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
-          </span>
-          <span class="btn small dz-btn" aria-hidden="true">Choose files…</span>
-        </label>
+      <div class="ticker" aria-hidden="true">
+        <span>*** WELCOME TO OCR DESK *** THE #1 PLACE ON THE INFORMATION SUPERHIGHWAY TO MAKE YOUR SCANS SEARCHABLE *** NOW Y2K COMPLIANT *** SIGN OUR GUESTBOOK *** BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 ***</span>
+      </div>
 
-        <div id="staging" class="staging" hidden>
-          <ul id="staged-list" class="staged-list"></ul>
+      <main class="window-body">
+        <!-- ============================================================ Convert -->
+        <section class="view wrap" id="view-convert" aria-labelledby="convert-title">
+          <header class="page-head">
+            <div class="wordart" aria-hidden="true">OCR Desk</div>
+            <h1 id="convert-title"><span class="new-burst" aria-hidden="true">NEW!</span> Convert</h1>
+            <p>Scans, photos and text files become PDFs you can search, copy from, and jump through by section.</p>
+            <hr class="rainbow-rule">
+          </header>
 
-          <div class="options">
-            <fieldset class="opt opt-wide">
-              <legend>OCR engine</legend>
-              <div class="group group-pad">
-                <div class="segmented" id="engine">
-                  <label><input type="radio" name="engine" value="tesseract" checked><span>Tesseract</span></label>
-                  <label><input type="radio" name="engine" value="paddle"><span>PaddleOCR</span></label>
-                </div>
-                <p class="hint muted" id="engine-hint"></p>
+          <section class="card" aria-label="Upload files">
+            <label class="dropzone" id="dropzone" tabindex="0">
+              <input type="file" id="file-input" multiple hidden>
+              <span class="dz-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32"><path d="M8 3h12l6 6v20H8z" fill="#fff" stroke="#000"/><path d="M20 3v6h6" fill="#c0c0c0" stroke="#000"/><path d="M11 13h11M11 16h11M11 19h8M11 22h10" stroke="#000080"/></svg>
+              </span>
+              <span class="dz-text">
+                <span class="dz-title">Drop files to convert</span>
+                <span class="dz-sub muted" id="accepted-note">PDF, images and text files</span>
+                <span class="dz-sub muted dz-paste">Or paste an image with <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
+              </span>
+              <span class="btn small dz-btn" aria-hidden="true">Browse…</span>
+            </label>
+
+            <div id="staging" class="staging" hidden>
+              <ul id="staged-list" class="staged-list"></ul>
+
+              <div class="options">
+                <fieldset class="opt opt-wide">
+                  <legend>OCR engine</legend>
+                  <div class="group group-pad">
+                    <div class="segmented" id="engine">
+                      <label><input type="radio" name="engine" value="tesseract" checked><span>Tesseract</span></label>
+                      <label><input type="radio" name="engine" value="paddle"><span>PaddleOCR</span></label>
+                    </div>
+                    <p class="hint muted" id="engine-hint"></p>
+                  </div>
+                </fieldset>
+
+                <fieldset class="opt opt-wide">
+                  <legend>Languages</legend>
+                  <div class="group group-pad">
+                    <div id="languages" class="chips"></div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="opt">
+                  <legend>OCR mode</legend>
+                  <div class="group group-pad">
+                    <div class="segmented" id="mode">
+                      <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
+                      <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
+                      <label><input type="radio" name="mode" value="force"><span>Force</span></label>
+                    </div>
+                    <p class="hint muted" id="mode-hint"></p>
+                  </div>
+                </fieldset>
+
+                <fieldset class="opt">
+                  <legend>Image cleanup</legend>
+                  <div class="group">
+                    <label class="toggle"><input type="checkbox" class="switch" id="opt-rotate" checked><span>Auto-rotate pages</span></label>
+                    <label class="toggle"><input type="checkbox" class="switch" id="opt-deskew"><span>Straighten (deskew)</span></label>
+                    <label class="toggle"><input type="checkbox" class="switch" id="opt-clean"><span>Clean noise before OCR</span></label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="opt opt-wide" id="combine-box" hidden>
+                  <legend>Output</legend>
+                  <div class="group">
+                    <label class="toggle"><input type="checkbox" class="switch" id="opt-combine"><span>Combine into one PDF</span></label>
+                    <div class="row-input">
+                      <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
+                    </div>
+                  </div>
+                </fieldset>
               </div>
-            </fieldset>
 
-            <fieldset class="opt opt-wide">
-              <legend>Languages</legend>
-              <div class="group group-pad">
-                <div id="languages" class="chips"></div>
+              <div class="actions">
+                <button type="button" class="btn ghost" id="clear-staged">Clear</button>
+                <button type="button" class="btn primary" id="start">Process files</button>
               </div>
-            </fieldset>
-
-            <fieldset class="opt">
-              <legend>OCR mode</legend>
-              <div class="group group-pad">
-                <div class="segmented" id="mode">
-                  <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
-                  <label><input type="radio" name="mode" value="redo"><span>Redo</span></label>
-                  <label><input type="radio" name="mode" value="force"><span>Force</span></label>
-                </div>
-                <p class="hint muted" id="mode-hint"></p>
-              </div>
-            </fieldset>
-
-            <fieldset class="opt">
-              <legend>Image cleanup</legend>
-              <div class="group">
-                <label class="toggle"><span>Auto-rotate pages</span><input type="checkbox" class="switch" id="opt-rotate" checked></label>
-                <label class="toggle"><span>Straighten (deskew)</span><input type="checkbox" class="switch" id="opt-deskew"></label>
-                <label class="toggle"><span>Clean noise before OCR</span><input type="checkbox" class="switch" id="opt-clean"></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="opt opt-wide" id="combine-box" hidden>
-              <legend>Output</legend>
-              <div class="group">
-                <label class="toggle"><span>Combine into one PDF</span><input type="checkbox" class="switch" id="opt-combine"></label>
-                <div class="row-input">
-                  <input type="text" id="opt-title" class="text-input" placeholder="Combined file name (optional)" maxlength="150" hidden>
-                </div>
-              </div>
-            </fieldset>
-          </div>
-
-          <div class="actions">
-            <button type="button" class="btn ghost" id="clear-staged">Clear</button>
-            <button type="button" class="btn primary" id="start">Process files</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="results" class="results" hidden aria-labelledby="results-title">
-        <div class="section-head">
-          <h2 id="results-title">This session</h2>
-          <button type="button" class="btn ghost small" id="clear-finished">Clear finished</button>
-        </div>
-        <ol id="job-list" class="job-list"></ol>
-      </section>
-
-      <section class="library" id="library" aria-labelledby="library-title">
-        <header class="lib-head">
-          <div>
-            <h2 id="library-title">Library</h2>
-            <p class="muted small" id="library-sub">Converted files are kept in this browser.</p>
-          </div>
-          <div class="lib-tools">
-            <input type="search" id="lib-search" class="text-input search" placeholder="Search" aria-label="Search library">
-            <select id="lib-sort" class="text-input select" aria-label="Sort by">
-              <option value="date">Date</option>
-              <option value="name">Name</option>
-              <option value="pages">Pages</option>
-              <option value="size">Size</option>
-            </select>
-            <div class="segmented icon-seg" id="lib-view" role="radiogroup" aria-label="View">
-              <label title="Grid"><input type="radio" name="lib-view" value="grid" checked aria-label="Grid"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1.2"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1.2"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2"/></svg></span></label>
-              <label title="List"><input type="radio" name="lib-view" value="list" aria-label="List"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="2" rx="1"/><rect x="3" y="9" width="14" height="2" rx="1"/><rect x="3" y="14" width="14" height="2" rx="1"/></svg></span></label>
             </div>
-          </div>
-        </header>
+          </section>
 
-        <ul class="lib-grid" id="lib-grid"></ul>
+          <section id="results" class="results" hidden aria-labelledby="results-title">
+            <div class="section-head">
+              <h2 id="results-title">This session</h2>
+              <button type="button" class="btn ghost small" id="clear-finished">Clear finished</button>
+            </div>
+            <ol id="job-list" class="job-list"></ol>
+          </section>
 
-        <div class="lib-table-wrap" id="lib-table-wrap" hidden>
-          <table class="lib-table">
-            <thead>
-              <tr>
-                <th scope="col" class="c-name"><button type="button" data-sort="name">Name</button></th>
-                <th scope="col" class="c-num"><button type="button" data-sort="pages">Pages</button></th>
-                <th scope="col" class="c-num"><button type="button" data-sort="size">Size</button></th>
-                <th scope="col" class="c-date"><button type="button" data-sort="date">Converted</button></th>
-                <th scope="col" class="c-act"><span class="visually-hidden">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody id="lib-rows"></tbody>
-          </table>
-        </div>
+          <section class="library" id="library" aria-labelledby="library-title">
+            <header class="lib-head">
+              <div>
+                <h2 id="library-title">Library</h2>
+                <p class="muted small" id="library-sub">Converted files are kept in this browser.</p>
+              </div>
+              <div class="lib-tools">
+                <input type="search" id="lib-search" class="text-input search" placeholder="Search" aria-label="Search library">
+                <select id="lib-sort" class="text-input select" aria-label="Sort by">
+                  <option value="date">Date</option>
+                  <option value="name">Name</option>
+                  <option value="pages">Pages</option>
+                  <option value="size">Size</option>
+                </select>
+                <div class="segmented icon-seg" id="lib-view" role="radiogroup" aria-label="View">
+                  <label title="Large icons"><input type="radio" name="lib-view" value="grid" checked aria-label="Grid"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg></span></label>
+                  <label title="Details"><input type="radio" name="lib-view" value="list" aria-label="List"><span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="2"/><rect x="3" y="9" width="14" height="2"/><rect x="3" y="14" width="14" height="2"/></svg></span></label>
+                </div>
+              </div>
+            </header>
 
-        <div class="empty" id="lib-empty" hidden>
-          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 7h14l10 10v23a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M28 7v10h10M18 26h12M18 32h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <p class="empty-title" id="lib-empty-title">No documents yet</p>
-          <p class="muted" id="lib-empty-text">Files you convert are saved here, in this browser.</p>
-        </div>
+            <ul class="lib-grid" id="lib-grid"></ul>
 
-        <footer class="lib-foot" id="lib-foot" hidden>
-          <span class="muted small" id="storage-note"></span>
-          <button type="button" class="btn ghost small" id="clear-library">Delete all</button>
-        </footer>
-      </section>
-    </section>
-  </main>
+            <div class="lib-table-wrap" id="lib-table-wrap" hidden>
+              <table class="lib-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="c-name"><button type="button" data-sort="name">Name</button></th>
+                    <th scope="col" class="c-num"><button type="button" data-sort="pages">Pages</button></th>
+                    <th scope="col" class="c-num"><button type="button" data-sort="size">Size</button></th>
+                    <th scope="col" class="c-date"><button type="button" data-sort="date">Converted</button></th>
+                    <th scope="col" class="c-act"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="lib-rows"></tbody>
+              </table>
+            </div>
+
+            <div class="empty" id="lib-empty" hidden>
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 8h10l2 3h14v16H3z" fill="#ffff80" stroke="#000"/><path d="M3 12h26" stroke="#808000"/></svg>
+              <p class="empty-title" id="lib-empty-title">No documents yet</p>
+              <p class="muted" id="lib-empty-text">Files you convert are saved here, in this browser.</p>
+            </div>
+
+            <footer class="lib-foot" id="lib-foot" hidden>
+              <span class="muted small" id="storage-note"></span>
+              <button type="button" class="btn ghost small" id="clear-library">Delete all</button>
+            </footer>
+          </section>
+
+          <footer class="page-foot">
+            <hr class="rainbow-rule">
+            <p class="counter-line">You are visitor number <span class="hit-counter" id="hit-counter" aria-label="Visitor counter">0001337</span></p>
+            <p class="small">
+              <a href="#" data-retro="guestbook">Sign my Guestbook</a> |
+              <a href="#" data-retro="guestbook">View my Guestbook</a> |
+              <a href="#" data-retro="webring">&lt;&lt; Prev</a> OCR WebRing <a href="#" data-retro="webring">Next &gt;&gt;</a>
+            </p>
+            <p class="badges" aria-hidden="true">
+              <span class="badge88 b-ie">Microsoft<b>Internet Explorer</b></span>
+              <span class="badge88 b-ns">Netscape<b>NOW!</b></span>
+              <span class="badge88 b-y2k">Y2K<b>COMPLIANT</b></span>
+              <span class="badge88 b-html">HTML<b>3.2</b></span>
+            </p>
+            <p class="muted small">&copy; 1998 OCR Desk. Best viewed at 800&times;600 in 256 colors.</p>
+          </footer>
+        </section>
+      </main>
+
+      <footer class="statusbar">
+        <span class="sb-main">Done</span>
+        <span class="sb-cell" id="ttl-note"></span>
+        <span class="sb-cell sb-zone">Internet zone</span>
+      </footer>
+    </div>
+
+    <!-- ============================================================ Right side of the desktop -->
+    <aside class="side side-right" aria-label="Advertisements">
+      <a class="ad ad-winner" href="#" data-retro="ad" data-ad="winner">
+        <span class="ad-tag">ADVERTISEMENT</span>
+        <strong class="flash">CONGRATULATIONS!!!</strong>
+        <span>You are the</span>
+        <span class="big-num">1,000,000<sup>th</sup></span>
+        <span>visitor!</span>
+        <span class="ad-btn blink-btn">CLAIM YOUR PRIZE</span>
+      </a>
+
+      <a class="ad ad-monkey" href="#" data-retro="ad" data-ad="monkey">
+        <span class="ad-tag">ADVERTISEMENT</span>
+        <strong>PUNCH THE TYPO</strong>
+        <span class="monkey-field" aria-hidden="true"><span class="typo">teh</span></span>
+        <span>Hit it &amp; WIN <b>$20!</b></span>
+      </a>
+
+      <a class="ad ad-aol" href="#" data-retro="ad" data-ad="aol">
+        <span class="ad-tag">ADVERTISEMENT</span>
+        <span class="cd" aria-hidden="true"></span>
+        <strong>500 HOURS FREE!</strong>
+        <span>Get on the Internet with <b>OCR Online</b> 4.0</span>
+        <span class="ad-btn">INSTALL NOW</span>
+      </a>
+
+      <div class="ad ad-mail">
+        <span class="mailbox" aria-hidden="true">&#x2709;</span>
+        <strong>E-MAIL ME!</strong>
+        <small>webmaster@ocrdesk.com</small>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============================================================ Taskbar -->
+  <div class="taskbar" id="taskbar">
+    <button type="button" class="start-btn" id="start-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="start-menu">
+      <span class="win-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <b>Start</b>
+    </button>
+    <span class="task-sep" aria-hidden="true"></span>
+    <span class="task active" aria-hidden="true"><img src="favicon.svg" alt="" width="16" height="16"> OCR Desk - Microsoft Internet...</span>
+    <span class="tray">
+      <span class="tray-icon" aria-hidden="true" title="Volume">&#x1F50A;</span>
+      <time id="tray-clock"></time>
+    </span>
+    <div class="start-menu" id="start-menu" role="menu" hidden>
+      <div class="start-band" aria-hidden="true"><b>OCR</b>Desk 98</div>
+      <ul>
+        <li><button type="button" role="menuitem" data-retro="top"><span class="sm-ico" aria-hidden="true">&#x1F4C4;</span> <span><u>C</u>onvert files</span></button></li>
+        <li><button type="button" role="menuitem" data-retro="library"><span class="sm-ico" aria-hidden="true">&#x1F4C1;</span> <span><u>D</u>ocuments</span></button></li>
+        <li><button type="button" role="menuitem" data-retro="popups" id="popup-toggle"><span class="sm-ico" aria-hidden="true">&#x1F6AB;</span> <span>Pop-up <u>B</u>locker</span></button></li>
+        <li class="sm-sep" role="separator"></li>
+        <li><button type="button" role="menuitem" data-retro="shutdown"><span class="sm-ico" aria-hidden="true">&#x1F50C;</span> <span>Sh<u>u</u>t Down...</span></button></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="popup-layer" id="popup-layer"></div>
 
   <!-- ============================================================ Viewer -->
   <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-name" hidden>
     <div class="viewer-backdrop" id="viewer-backdrop"></div>
-    <div class="viewer-panel" id="viewer-panel">
+    <div class="viewer-panel window" id="viewer-panel">
+      <div class="title-bar viewer-titlebar">
+        <span class="brand"><img src="favicon.svg" alt="" width="16" height="16"><span>Document Viewer</span></span>
+        <span class="title-controls">
+          <button type="button" class="tc-close" id="viewer-close" aria-label="Close" title="Close (Esc)"></button>
+        </span>
+      </div>
       <header class="viewer-bar">
         <div class="viewer-title">
           <div class="viewer-name" id="viewer-name"></div>
@@ -179,9 +335,6 @@
         <div class="viewer-actions">
           <a class="btn small" id="viewer-open" target="_blank" rel="noopener" title="Open in a new tab">Open</a>
           <a class="btn primary small" id="viewer-dl" download>Download</a>
-          <button type="button" class="icon-btn" id="viewer-close" aria-label="Close" title="Close (Esc)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
         </div>
       </header>
       <div class="viewer-body">
@@ -207,6 +360,9 @@
           </div>
         </div>
       </div>
+      <footer class="statusbar">
+        <span class="sb-main">Document: Done</span>
+      </footer>
     </div>
   </div>
 
@@ -220,7 +376,7 @@
         </div>
         <span class="pill"></span>
         <button type="button" class="icon-btn job-remove" title="Remove" aria-label="Remove">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="3"/></svg>
         </button>
       </div>
       <div class="bar"><span></span></div>
@@ -244,7 +400,7 @@
         <span class="tile-meta muted small"></span>
       </button>
       <button type="button" class="icon-btn tile-remove" aria-label="Delete" title="Delete">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="3"/></svg>
       </button>
     </li>
   </template>
