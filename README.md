@@ -1,6 +1,34 @@
-# OCR Desk
+<p align="center">
+  <img src=".github/readme/banner.svg" alt="OCR Desk: turn scans, photos and documents into searchable, bookmarked PDFs" width="880">
+</p>
 
-Turn scans, photos and documents into **searchable, bookmarked PDFs**.
+<p align="center">
+  <img src=".github/readme/badge-docker.svg" alt="Docker powered" width="88" height="31">
+  <img src=".github/readme/badge-tesseract.svg" alt="Tesseract 5 inside" width="88" height="31">
+  <img src=".github/readme/badge-paddle.svg" alt="PaddleOCR PP-OCRv6" width="88" height="31">
+  <img src=".github/readme/badge-fastapi.svg" alt="FastAPI enabled" width="88" height="31">
+  <img src=".github/readme/badge-vanilla.svg" alt="100% vanilla JS, no build step" width="88" height="31">
+  <a href="LICENSE"><img src=".github/readme/badge-mit.svg" alt="MIT license" width="88" height="31"></a>
+  <img src=".github/readme/badge-y2k.svg" alt="Y2K compliant" width="88" height="31">
+  <img src=".github/readme/badge-netscape.svg" alt="Netscape Now!" width="88" height="31">
+</p>
+
+<p align="center">
+  <a href="#quick-start"><b>Quick start</b></a> |
+  <a href="#architecture">Architecture</a> |
+  <a href="#configuration">Configuration</a> |
+  <a href="#api">API</a> |
+  <a href="#ocr-modes">OCR modes</a> |
+  <a href="#notes">Notes</a>
+</p>
+
+<p align="center">
+  <img src=".github/readme/screenshot-desktop.png" alt="OCR Desk running in the browser: a Windows 95 desktop with the converter in an Internet Explorer window and ads in the margins" width="820">
+  <br>
+  <sub>&#9650; An actual screenshot. Pop-up ads included at no extra charge.</sub>
+</p>
+
+## <img src=".github/readme/icon-program.svg" alt="" width="30" height="24">What it does
 
 Drop in PDFs, plain-text/Markdown files or images (JPG, PNG, TIFF incl. multi-page, HEIC, WebP, BMP, GIF).
 Each file is converted to PDF, OCR'd with Tesseract or PaddleOCR (your pick per job), and given a navigable outline (bookmarks):
@@ -13,16 +41,26 @@ Each file is converted to PDF, OCR'd with Tesseract or PaddleOCR (your pick per 
 
 You also get a plain-text export of every job.
 
-## Quick start
+<details>
+<summary><b>&#x1F449; CLICK HERE for MORE SCREENSHOTS!!</b></summary>
+<br>
+<p align="center">
+  <img src=".github/readme/screenshot-viewer.png" alt="The document viewer: page and section navigation on the left, the converted PDF on the right" width="820">
+  <br>
+  <sub>The viewer: every detected heading becomes a bookmark you can jump to.</sub>
+</p>
+</details>
+
+## <img src=".github/readme/icon-computer.svg" alt="" width="30" height="24">Quick start
 
 ```bash
 cp .env.example .env     # optional: tweak port, languages, limits
 docker compose up -d --build
 ```
 
-Open <http://localhost:8080>. The first build takes a few minutes.
+Open <http://localhost:8080>. The first build takes a few minutes (about as long as a 56k modem download of one JPEG).
 
-## Architecture
+## <img src=".github/readme/icon-network.svg" alt="" width="30" height="24">Architecture
 
 ```
 browser ──► nginx :80 ──► static frontend (vanilla JS, no build step)
@@ -51,7 +89,7 @@ Library and the viewer keep working after the server copy expires. Those copies 
 user's device until they are deleted from the Library. Page thumbnails are rendered in the browser
 with PDF.js, vendored under `frontend/vendor/pdfjs/` (see `VERSION` there).
 
-## Configuration
+## <img src=".github/readme/icon-settings.svg" alt="" width="30" height="24">Configuration
 
 All settings are environment variables. See [`.env.example`](.env.example).
 
@@ -67,7 +105,7 @@ All settings are environment variables. See [`.env.example`](.env.example).
 | `MAX_FILE_MB` / `MAX_FILES_PER_JOB` / `MAX_PAGES_PER_JOB` | `100` / `20` / `1000` | Limits |
 | `JOB_TTL_MINUTES` | `120` | Result retention |
 
-## API
+## <img src=".github/readme/icon-globe.svg" alt="" width="30" height="24">API
 
 | Method | Path | |
 |---|---|---|
@@ -83,16 +121,47 @@ Interactive docs: <http://localhost:8080/api/docs>
 curl -F files=@scan.pdf -F languages=eng http://localhost:8080/api/jobs
 ```
 
-## OCR modes
+## <img src=".github/readme/icon-magnifier.svg" alt="" width="30" height="24">OCR modes
 
 - **Auto** (`--skip-text`): OCRs only pages without text. Fastest; digital text is untouched.
 - **Redo** (`--redo-ocr`): replaces an old/bad OCR layer while keeping real text. Deskew is unavailable.
 - **Force** (`--force-ocr`): rasterizes and OCRs every page. Use for broken text layers.
 
-## Notes
+## <img src=".github/readme/icon-warning.svg" alt="" width="30" height="24">Notes
+
+<p align="center">
+  <img src=".github/readme/dialog-warning.svg" alt="Warning dialog: there are no user accounts, so put OCR Desk behind your own login" width="470">
+</p>
 
 - Job IDs are unguessable 128-bit tokens and act as the access key. There are no user accounts, so put the app
   behind your own auth (e.g. an nginx `auth_basic` or SSO proxy) if it is exposed beyond a trusted network.
 - Word/ODT/RTF input is not supported (LibreOffice was dropped to keep the image small). Export those to PDF first.
 - PyMuPDF is AGPL-licensed (commercial licence available from Artifex). This is fine for self-hosting, but check it
   if you plan to distribute a modified version.
+
+<br>
+
+<p align="center">
+  <img src=".github/readme/rule.svg" alt="" width="800" height="6">
+</p>
+
+<p align="center">
+  You are visitor number <img src=".github/readme/counter.svg" alt="0001337" height="26" align="absmiddle">
+</p>
+
+<p align="center">
+  <a href="https://github.com/furkanarslan7108/ocr-website/issues/new">Sign my Guestbook</a> |
+  <a href="https://github.com/furkanarslan7108/ocr-website/issues">View my Guestbook</a> |
+  <a href="https://github.com/ocrmypdf/OCRmyPDF">&lt;&lt; Prev</a>
+  <a href="https://github.com/topics/ocr"><b>OCR WebRing</b></a>
+  <a href="https://github.com/tesseract-ocr/tesseract">Next &gt;&gt;</a>
+</p>
+
+<p align="center">
+  <img src=".github/readme/construction.svg" alt="Under construction" width="480">
+</p>
+
+<p align="center">
+  <sub>&copy; 1998 OCR Desk. Best viewed in Netscape Navigator 4.0 at 800&times;600 in 256 colors.<br>
+  Released under the <a href="LICENSE">MIT License</a>.</sub>
+</p>

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="330" viewBox="0 0 880 330" font-family="Tahoma, 'MS Sans Serif', Geneva, Verdana, sans-serif">
+  <title>OCR Desk - Microsoft Internet Explorer</title>
+  <defs>
+    <linearGradient id="title" x1="0" x2="1"><stop offset="0" stop-color="#000080"/><stop offset="1" stop-color="#1084d0"/></linearGradient>
+    <linearGradient id="rainbow" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff0000"/><stop offset=".22" stop-color="#ff8800"/><stop offset=".40" stop-color="#ffee00"/>
+      <stop offset=".58" stop-color="#00cc00"/><stop offset=".78" stop-color="#0066ff"/><stop offset="1" stop-color="#9900cc"/>
+    </linearGradient>
+    <linearGradient id="rule" x1="0" x2="400" gradientUnits="userSpaceOnUse" spreadMethod="repeat">
+      <stop offset="0" stop-color="red"/><stop offset=".17" stop-color="orange"/><stop offset=".33" stop-color="yellow"/>
+      <stop offset=".5" stop-color="lime"/><stop offset=".67" stop-color="cyan"/><stop offset=".83" stop-color="blue"/><stop offset="1" stop-color="red"/>
+      <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="-400 0" dur="3s" repeatCount="indefinite"/>
+    </linearGradient>
+    <clipPath id="ticker"><rect x="31" y="98" width="818" height="18"/></clipPath>
+  </defs>
+
+  <!-- desktop -->
+  <rect width="880" height="330" fill="#008080"/>
+
+  <!-- window frame -->
+  <rect x="20" y="14" width="840" height="302" fill="#c0c0c0"/>
+  <path d="M20 316V14h840" fill="none" stroke="#dfdfdf"/>
+  <path d="M21 315V15h838" fill="none" stroke="#fff"/>
+  <path d="M20.5 316.5h840V14" fill="none" stroke="#0a0a0a"/>
+  <path d="M21.5 315.5h838V15" fill="none" stroke="#808080"/>
+
+  <!-- title bar -->
+  <rect x="24" y="18" width="832" height="20" fill="url(#title)"/>
+  <g shape-rendering="crispEdges">
+    <path fill="#fff" d="M29 21h7v1h-7zM29 22h7v13h-7z"/>
+    <path fill="#000" d="M28 20h8v1h-8zM28 21h1v15h-1zM29 35h9v1h-9zM37 24h1v11h-1zM36 21h1v1h-1zM37 22h1v2h-1z"/>
+    <path fill="#000080" d="M30 23h4v1h-4zM30 25h5v1h-5zM30 27h3v1h-3zM30 29h5v1h-5zM30 31h4v1h-4z"/>
+  </g>
+  <text x="42" y="33" fill="#fff" font-size="13" font-weight="bold">OCR Desk - Microsoft Internet Explorer</text>
+  <g transform="translate(800 21)">
+    <g><rect width="16" height="14" fill="#c0c0c0"/><path d="M0 14V0h16" fill="none" stroke="#fff"/><path d="M0 13.5h15.5V0" fill="none" stroke="#0a0a0a"/><path d="M4 9h6v2H4z"/></g>
+    <g transform="translate(16)"><rect width="16" height="14" fill="#c0c0c0"/><path d="M0 14V0h16" fill="none" stroke="#fff"/><path d="M0 13.5h15.5V0" fill="none" stroke="#0a0a0a"/><path d="M3 2h9v9H3zM4 4v6h7V4z" fill-rule="evenodd"/></g>
+    <g transform="translate(34)"><rect width="16" height="14" fill="#c0c0c0"/><path d="M0 14V0h16" fill="none" stroke="#fff"/><path d="M0 13.5h15.5V0" fill="none" stroke="#0a0a0a"/><path d="M4 3h2l2 2 2-2h2v1L9.5 6.5 12 9v1h-2L8 8l-2 2H4V9l2.5-2.5L4 4z"/></g>
+  </g>
+
+  <!-- menu bar -->
+  <g font-size="13" fill="#000">
+    <text x="32" y="56"><tspan text-decoration="underline">F</tspan>ile</text>
+    <text x="72" y="56"><tspan text-decoration="underline">E</tspan>dit</text>
+    <text x="112" y="56"><tspan text-decoration="underline">V</tspan>iew</text>
+    <text x="158" y="56">F<tspan text-decoration="underline">a</tspan>vorites</text>
+    <text x="230" y="56"><tspan text-decoration="underline">T</tspan>ools</text>
+    <text x="278" y="56"><tspan text-decoration="underline">H</tspan>elp</text>
+  </g>
+  <!-- throbber -->
+  <rect x="812" y="42" width="40" height="22" fill="#000"/>
+  <g transform="translate(832 53)">
+    <path d="M0 0V-7A7 7 0 0 1 7 0z" fill="#ff2a00"/><path d="M0 0H7A7 7 0 0 1 0 7z" fill="#00b000"/>
+    <path d="M0 0V7A7 7 0 0 1-7 0z" fill="#ffd000"/><path d="M0 0H-7A7 7 0 0 1 0-7z" fill="#0050ff"/>
+    <circle r="3" fill="#000"/>
+    <animateTransform attributeName="transform" type="rotate" from="0" to="360" additive="sum" dur="1.6s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- address bar -->
+  <path d="M24 67.5h832" stroke="#808080"/><path d="M24 68.5h832" stroke="#fff"/>
+  <text x="32" y="86" font-size="13" fill="#404040">A<tspan text-decoration="underline">d</tspan>dress</text>
+  <rect x="92" y="72" width="716" height="21" fill="#fff"/>
+  <path d="M92 93V72h716" fill="none" stroke="#808080"/><path d="M92.5 92.5h715.5V72" fill="none" stroke="#fff"/>
+  <text x="100" y="87" font-size="13" fill="#000">http://github.com/furkanarslan7108/ocr-website/~readme.htm</text>
+  <rect x="814" y="72" width="38" height="21" fill="#c0c0c0"/>
+  <path d="M814 93V72h38" fill="none" stroke="#fff"/><path d="M814 92.5h37.5V72" fill="none" stroke="#0a0a0a"/>
+  <text x="825" y="87" font-size="13">Go</text>
+
+  <!-- ticker -->
+  <rect x="29" y="97" width="822" height="20" fill="#000"/>
+  <g clip-path="url(#ticker)">
+    <text y="112" fill="#00ff00" font-family="'Courier New', Courier, monospace" font-weight="bold" font-size="13" xml:space="preserve">*** WELCOME TO THE OCR DESK README *** SCANS IN, SEARCHABLE BOOKMARKED PDFs OUT *** NOW Y2K COMPLIANT *** SIGN OUR GUESTBOOK *** BEST VIEWED IN NETSCAPE NAVIGATOR 4.0 AT 800x600 ***<animate attributeName="x" from="850" to="-1500" dur="24s" begin="-6s" repeatCount="indefinite"/></text>
+  </g>
+
+  <!-- page -->
+  <rect x="26" y="121" width="828" height="171" fill="#fff"/>
+  <path d="M26 292V121h828" fill="none" stroke="#808080"/><path d="M26.5 291.5h827.5V121" fill="none" stroke="#dfdfdf"/>
+
+  <!-- word art -->
+  <g font-family="Impact, 'Arial Black', Haettenschweiler, sans-serif" font-style="italic" font-weight="900" font-size="78" text-anchor="middle" letter-spacing="2">
+    <text x="444" y="207" fill="#000080" transform="skewX(-8) translate(30 0)">OCR Desk</text>
+    <text x="440" y="203" fill="url(#rainbow)" transform="skewX(-8) translate(30 0)">OCR Desk</text>
+  </g>
+
+  <!-- NEW! burst -->
+  <g transform="translate(206 178) rotate(-14)">
+    <polygon points="0,-28 6,-18 17,-22 16,-10 27,-7 18,2 26,12 14,13 13,25 3,18 -6,27 -9,16 -21,20 -18,8 -27,3 -18,-5 -24,-16 -12,-16 -10,-27" fill="#ffef00"/>
+    <text y="4" fill="#e00000" font-size="12" font-weight="900" text-anchor="middle">NEW!</text>
+    <animate attributeName="opacity" values="1;0" keyTimes="0;.5" calcMode="discrete" dur="1s" repeatCount="indefinite"/>
+  </g>
+
+  <text x="440" y="244" text-anchor="middle" font-family="'Times New Roman', Times, 'Liberation Serif', serif" font-size="19" fill="#000">Turn scans, photos and documents into <tspan font-weight="bold">searchable, bookmarked PDFs</tspan>.</text>
+  <rect x="140" y="262" width="600" height="6" fill="url(#rule)"/>
+
+  <!-- status bar -->
+  <rect x="24" y="296" width="660" height="17" fill="#c0c0c0"/>
+  <path d="M24 313V296h660" fill="none" stroke="#808080"/><path d="M24.5 312.5h659.5V296" fill="none" stroke="#fff"/>
+  <text x="30" y="309" font-size="12">Done</text>
+  <rect x="688" y="296" width="168" height="17" fill="#c0c0c0"/>
+  <path d="M688 313V296h168" fill="none" stroke="#808080"/><path d="M688.5 312.5h167.5V296" fill="none" stroke="#fff"/>
+  <circle cx="701" cy="304.5" r="5.5" fill="#1084d0" stroke="#000080"/><path d="M696 304.5h10M701 299v11" stroke="#00ff80" stroke-width=".8"/>
+  <text x="712" y="309" font-size="12">Internet zone</text>
+</svg>
